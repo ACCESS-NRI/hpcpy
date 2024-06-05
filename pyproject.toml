@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "hpcpy"
+version = "0.1.0"
+description = "A Python package to interface with HPC scheduling systems."
+readme = "README.rst"
+authors = [
+  {name = "Ben Schroeter", email = "benjamin.schroeter@anu.edu.au"}
+]
+maintainers = [
+  {name = "Ben Schroeter", email = "benjamin.schroeter@anu.edu.au"}
+]
+classifiers = [
+
+]
+license = {text = "Apache Software License 2.0"}
+dependencies = [
+  
+]
+
+[project.optional-dependencies]
+dev = [
+    "coverage",  # testing
+    "mypy",  # linting
+    "pytest",  # testing
+    "ruff"  # linting
+]
+
+[project.urls]
+
+bugs = "https://github.com/bschroeter/hpcpy/issues"
+changelog = "https://github.com/bschroeter/hpcpy/blob/master/changelog.md"
+homepage = "https://github.com/bschroeter/hpcpy"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.package-data]
+"hpcpy" = ["data/*", "data/test/*"]
+
+
+
+
+# Mypy
+# ----
+
+[tool.mypy]
+files = "."
+
+# Use strict defaults
+strict = true
+warn_unreachable = true
+warn_no_return = true
+
+[[tool.mypy.overrides]]
+# Don't require test functions to include types
+module = "tests.*"
+allow_untyped_defs = true
+disable_error_code = "attr-defined"
+
