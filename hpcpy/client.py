@@ -284,6 +284,10 @@ class ClientFactory:
             sbatch=SlurmClient
         )
 
+        # Remove the MockClient if dev mode is off
+        if os.getenv("HPCPY_DEV_MODE", "0") != "1":
+            _ = clients.pop("ls")
+
         # Loop through the clients in order, looking for a valid scheduler
         for cmd, client in clients.items():
             if shell(f'which {cmd}', check=False).returncode == 0:
