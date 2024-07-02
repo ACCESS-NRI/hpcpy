@@ -1,6 +1,7 @@
 """Utilities."""
 import subprocess as sp
-from jinja2 import BaseLoader, Environment
+import jinja2 as j2
+import jinja2.meta as j2m
 from pathlib import Path
 from importlib import resources
 
@@ -49,9 +50,31 @@ def interpolate_string_template(template, **kwargs) -> str:
     -------
     str
         Interpolated template.
+    
+    Raises
+    ------
+    jinja2.exceptions.UndefinedError :
+        When a variable is undeclared nor has a default applied.
     """
-    _template = Environment(loader=BaseLoader()).from_string(template)
-    return _template.render(**kwargs)
+
+    # Set up the rendering environment
+    env = j2.Environment(
+        loader=j2.BaseLoader(),
+        undefined=j2.DebugUndefined
+    )
+    
+    # Render the template
+    _template = env.from_string(template)
+    rendered = _template.render(**kwargs)
+    
+    # Look for undefined variables (those that remain even after conditionals)
+    ast = env.parse(rendered)
+    undefined = j2m.find_undeclared_variables(ast)
+
+    if undefined:
+        raise j2.UndefinedError(f'The following variables are undefined: {undefined!r}')
+    
+    return rendered
 
 
 def interpolate_file_template(filepath, **kwargs):

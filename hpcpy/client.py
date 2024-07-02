@@ -183,9 +183,10 @@ class Client:
         str
             Hash-prefixed filename.
         """
-        _filename = os.path.basename(filepath)
+        filename, ext = os.path.splitext(filepath)
+        filename = os.path.basename(filename)
         _hash = ''.join(choice(ascii_uppercase) for i in range(hash_length))
-        return f'{_hash}_{_filename}'
+        return f'{filename}_{_hash}{ext}'
 
 
     def _render_job_script(self, template, **context):
@@ -240,7 +241,7 @@ class PBSClient(Client):
         parsed = json.loads(raw)
 
         # Get the status out of the job ID
-        _status = parsed.get('Jobs').get(job_id).get('status')
+        _status = parsed.get('Jobs').get(job_id).get('job_state')
         return hc.PBS_STATUSES[_status]
 
 
@@ -283,15 +284,13 @@ class ClientFactory:
             sbatch=SlurmClient
         )
 
+        # Remove the MockClient if dev mode is off
+        if os.getenv("HPCPY_DEV_MODE", "0") != "1":
+            _ = clients.pop("ls")
+
         # Loop through the clients in order, looking for a valid scheduler
         for cmd, client in clients.items():
             if shell(f'which {cmd}', check=False).returncode == 0:
                 return client()
         
         raise hx.NoClientException()
-
-
-if __name__ == '__main__':
-
-    client = ClientFactory.get_client()
-    print(client)

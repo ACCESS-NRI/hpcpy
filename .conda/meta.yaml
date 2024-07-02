@@ -1,0 +1,31 @@
+{% set data = load_setup_py_data() %}
+{% set version = data.get('version') %}
+
+package:
+  name: hpcpy
+  version: "{{ version }}"
+
+source:
+  path: ..
+
+
+build:
+  noarch: python
+  number: 0
+  script: "{{ PYTHON }} -m pip install . -vv"
+
+
+requirements:
+  host:
+    - python >=3.9
+    - pip
+    - setuptools>=64
+    - versioneer
+  run:
+    - python >=3.9
+    - Jinja2 >=3.1.4
+    - pandas >=2.2.2
+
+test:
+  imports:
+    - hpcpy

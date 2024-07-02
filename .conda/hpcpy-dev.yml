@@ -1,0 +1,18 @@
+name: hpcpy_dev
+
+channels:
+  - conda-forge
+  - accessnri
+  - coecms
+  - defaults
+
+dependencies:
+  - python>=3.9
+  - Jinja2>=3.1.4
+  - pandas>=2.2.2
+  - pip
+  - pytest
+  - black
+  - ruff
+  - pip:
+    - -r mkdocs-requirements.txt
