@@ -1,63 +1,53 @@
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
-
 [project]
+
+# Metadata
 name = "hpcpy"
-version = "0.1.0"
-description = "A Python package to interface with HPC scheduling systems."
-readme = "README.rst"
-authors = [
-  {name = "Ben Schroeter", email = "benjamin.schroeter@anu.edu.au"}
-]
-maintainers = [
-  {name = "Ben Schroeter", email = "benjamin.schroeter@anu.edu.au"}
-]
+description = "A prototype Python client for interacting with HPC scheduling systems"
 classifiers = [
-
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache 2.0 License",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering",
+    "Operating System :: OS Independent"
 ]
-license = {text = "Apache Software License 2.0"}
+readme = "README.md"
+license = {file="LICENSE"}
+
+# Get the version dynamically (i.e. from git)
+dynamic = ["version"]
+
+# Dependencies
+requires-python = ">=3.11"
 dependencies = [
-  
+    "Jinja2>=3.1.4",
+    "pandas>=2.2.2"
 ]
 
-[project.optional-dependencies]
-dev = [
-    "coverage",  # testing
-    "mypy",  # linting
-    "pytest",  # testing
-    "ruff"  # linting
+authors = [
+    {name = "ACCESS-NRI", email = "access.nri@anu.edu.au"}
 ]
 
 [project.urls]
+source-code = "https://github.com/ACCESS-NRI/hpcpy"
 
-bugs = "https://github.com/bschroeter/hpcpy/issues"
-changelog = "https://github.com/bschroeter/hpcpy/blob/master/changelog.md"
-homepage = "https://github.com/bschroeter/hpcpy"
+[build-system]
+build-backend = "setuptools.build_meta"
+requires = [
+  "setuptools>=64",
+  "versioneer[toml]==0.29"
+]
 
-[tool.setuptools]
-package-dir = {"" = "src"}
+[tool.setuptools.packages.find]
+where = ["."]
 
-[tool.setuptools.package-data]
-"hpcpy" = ["data/*", "data/test/*"]
+[tool.setuptools.dynamic]
+version = {attr = "hpcpy.__version__"}
 
-
-
-
-# Mypy
-# ----
-
-[tool.mypy]
-files = "."
-
-# Use strict defaults
-strict = true
-warn_unreachable = true
-warn_no_return = true
-
-[[tool.mypy.overrides]]
-# Don't require test functions to include types
-module = "tests.*"
-allow_untyped_defs = true
-disable_error_code = "attr-defined"
-
+[tool.versioneer]
+VCS = "git"
+style = "pep440"
+versionfile_source = "hpcpy/_version.py"
+versionfile_build = "hpcpy/_version.py"
+tag_prefix = ""
+parentdir_prefix = "hpcpy-"

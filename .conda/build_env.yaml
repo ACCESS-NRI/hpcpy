@@ -1,0 +1,12 @@
+# Required for 'Build and upload conda packages' workflow
+
+channels:
+  - conda-forge
+  - accessnri
+  - coecms
+  - default
+
+dependencies:
+  - anaconda-client
+  - conda-build
+  - versioneer
