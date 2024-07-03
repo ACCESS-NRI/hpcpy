@@ -4,7 +4,7 @@ The following describes the basic usage of hpcpy.
 
 ## Getting a client object
 
-As the package aspires to be "scheduler agnostic" from the outset, the recommended way to get a `Client` object is to use the `ClientFactory` as follows:
+As the package aspires to be "scheduler agnostic" from the outset, the recommended way to get a `Client()` object is to use the `ClientFactory()` as follows:
 
 ```python
 from hpcpy.client import ClientFactory
@@ -41,16 +41,13 @@ echo "{{message}}"
 ```
 *submit.py*
 ```python
-# Create a context dictionary for variables
-# These are rendered into both the script and the underlying submission command
-context = dict(
-    message="Hello World."
-)
 
 job_id = client.submit(
     "/path/to/template.sh",
     render=True, # Note, this is False by default
-    message="Hello World!"
+    
+    # Additional key/value pairs are added to rendering context
+    message="Hello World."
 )
 ```
 
