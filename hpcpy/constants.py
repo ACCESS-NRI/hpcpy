@@ -1,23 +1,24 @@
 """Constants."""
+
 from pathlib import Path
 
 # Location for rendered job scripts
-JOB_SCRIPT_DIR = Path.home() / '.hpcpy' / 'job_scripts'
+JOB_SCRIPT_DIR = Path.home() / ".hpcpy" / "job_scripts"
 JOB_SCRIPT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Statuses
-STATUS_CYCLE_HARVESTING = 'U'
-STATUS_EXITING = 'E'
-STATUS_FINISHED = 'F'
-STATUS_HAS_SUBJOB = 'B'
-STATUS_HELD = 'H'
-STATUS_MOVED = 'M'
-STATUS_MOVING = 'T'
-STATUS_QUEUED = 'Q'
-STATUS_RUNNING = 'R'
-STATUS_SUBJOB_COMPLETED = 'X'
-STATUS_SUSPENDED = 'S'
-STATUS_WAITING = 'W'
+STATUS_CYCLE_HARVESTING = "U"
+STATUS_EXITING = "E"
+STATUS_FINISHED = "F"
+STATUS_HAS_SUBJOB = "B"
+STATUS_HELD = "H"
+STATUS_MOVED = "M"
+STATUS_MOVING = "T"
+STATUS_QUEUED = "Q"
+STATUS_RUNNING = "R"
+STATUS_SUBJOB_COMPLETED = "X"
+STATUS_SUSPENDED = "S"
+STATUS_WAITING = "W"
 
 # PBS status translation
 PBS_STATUSES = dict(
@@ -32,17 +33,17 @@ PBS_STATUSES = dict(
     T=STATUS_MOVING,
     U=STATUS_CYCLE_HARVESTING,
     W=STATUS_WAITING,
-    X=STATUS_SUBJOB_COMPLETED
+    X=STATUS_SUBJOB_COMPLETED,
 )
 
 # PBS command templates
-PBS_SUBMIT = 'qsub {job_script}'
-PBS_STATUS = 'qstat -f -F json {job_id}'
-PBS_DELETE = 'qdel {job_id}'
+PBS_SUBMIT = "qsub{directives} {job_script}"
+PBS_STATUS = "qstat -f -F json {job_id}"
+PBS_DELETE = "qdel {job_id}"
 
 # Mock command templateds
-MOCK_SUBMIT = 'echo 12345'
-MOCK_STATUS = 'echo Q'
+MOCK_SUBMIT = "echo 12345"
+MOCK_STATUS = "echo Q"
 MOCK_DELETE = 'echo "DELETED"'
 
 # Mock status translation

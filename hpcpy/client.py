@@ -1,19 +1,22 @@
 """Abstract class for client implementation."""
+
 from hpcpy.utilities import shell, interpolate_file_template
 import hpcpy.constants as hc
 import hpcpy.exceptions as hx
+import hpcpy.utilities as hu
 from pathlib import Path
 from random import choice
 from string import ascii_uppercase
 import os
 import json
-import datetime
+from datetime import datetime, timedelta
 import pandas as pd
+from typing import Union
 
 
 class Client:
 
-    def __init__(self, tmp_submit, tmp_status, tmp_delete, job_script_expiry='1H'):
+    def __init__(self, tmp_submit, tmp_status, tmp_delete, job_script_expiry="1H"):
 
         # Set the command templates
         self._tmp_submit = tmp_submit
@@ -32,7 +35,7 @@ class Client:
         rendered_job_scripts = self.list_rendered_job_scripts()
 
         # Work out the threshold
-        now = datetime.datetime.now()
+        now = datetime.now()
         threshold = now - pd.to_timedelta(self.job_script_expiry).to_pytimedelta()
 
         for rjs in rendered_job_scripts:
@@ -42,7 +45,7 @@ class Client:
                 continue
 
             # Get the modified time of the file, check threshold and delete
-            mod_time = datetime.datetime.fromtimestamp(os.path.getmtime(rjs))
+            mod_time = datetime.fromtimestamp(os.path.getmtime(rjs))
             if mod_time <= threshold:
                 os.remove(rjs)
 
@@ -56,10 +59,12 @@ class Client:
         """
         return [hc.JOB_SCRIPT_DIR / rjs for rjs in os.listdir(hc.JOB_SCRIPT_DIR)]
 
-    def submit(self, job_script, render=False, **context):
+    def submit(
+        self, job_script, directives=list(), render=False, dry_run=False, **context
+    ):
         """Submit the job script.
 
-        
+
         Parameters
         ----------
         job_script : path-like
@@ -71,21 +76,25 @@ class Client:
         """
 
         if render:
-            
-            _job_script = self._render_job_script(
-                job_script,
-                **context
-            )
+
+            _job_script = self._render_job_script(job_script, **context)
 
         else:
-            
+
             _job_script = job_script
 
-        context['job_script'] = _job_script
+        # Add the directives to the interpolation context (will return blank string if nothing there)
+        context["directives"] = self._render_directives(directives)
+
+        context["job_script"] = _job_script
         cmd = self._tmp_submit.format(**context)
+
+        # Just return the command string for the user without submitting
+        if dry_run:
+            return cmd
+
         result = self._shell(cmd)
         return result
-
 
     def status(self, job_id):
         """Check the status of a job.
@@ -99,7 +108,6 @@ class Client:
         cmd = self._tmp_status.format(job_id=job_id)
         result = self._shell(cmd)
         return result
-
 
     def delete(self, job_id):
         """Delete/cancel a job.
@@ -127,7 +135,6 @@ class Client:
             True if queued, False otherwise.
         """
         return self.status(job_id) == hc.STATUS_QUEUED
-    
 
     def is_running(self, job_id):
         """Check if the job is running.
@@ -144,7 +151,6 @@ class Client:
         """
         return self.status(job_id) == hc.STATUS_RUNNING
 
-    
     def _shell(self, cmd, decode=True):
         """Generic shell interface to capture exceptions.
 
@@ -163,10 +169,9 @@ class Client:
         result = shell(cmd)
 
         if decode:
-            result = result.stdout.decode('utf8').strip()
+            result = result.stdout.decode("utf8").strip()
 
         return result
-
 
     def _get_job_script_filename(self, filepath, hash_length=8) -> str:
         """Generate a script filename with a random prefix.
@@ -185,9 +190,8 @@ class Client:
         """
         filename, ext = os.path.splitext(filepath)
         filename = os.path.basename(filename)
-        _hash = ''.join(choice(ascii_uppercase) for i in range(hash_length))
-        return f'{filename}_{_hash}{ext}'
-
+        _hash = "".join(choice(ascii_uppercase) for i in range(hash_length))
+        return f"{filename}_{_hash}{ext}"
 
     def _render_job_script(self, template, **context):
         """Render a job script.
@@ -202,12 +206,9 @@ class Client:
         str
             Path to the rendered job script.
         """
-        
+
         # Render the template
-        _rendered = interpolate_file_template(
-            template,
-            **context
-        )
+        _rendered = interpolate_file_template(template, **context)
 
         # Generate the output filepath
         os.makedirs(hc.JOB_SCRIPT_DIR, exist_ok=True)
@@ -215,25 +216,43 @@ class Client:
         output_filepath = hc.JOB_SCRIPT_DIR / output_filename
 
         # Write it out
-        with open(output_filepath, 'w') as fo:
+        with open(output_filepath, "w") as fo:
             fo.write(_rendered)
-        
+
         return output_filepath
+
+    def _render_directives(self, directives):
+        """Render the directives into a single string for command interpolation.
+
+        Parameters
+        ----------
+        directives : list
+            List of scheduler-compliant directives. One per item.
+
+        Returns
+        -------
+        str
+            Rendered directives, or blank string.
+        """
+
+        # Render blank directives if empty
+        if not directives:
+            return ""
+
+        return " " + " ".join(directives)
 
 
 class PBSClient(Client):
 
     def __init__(self):
-        
+
         # Set up the templates
         super().__init__(
-            tmp_submit=hc.PBS_SUBMIT,
-            tmp_status=hc.PBS_STATUS,
-            tmp_delete=hc.PBS_DELETE
+            tmp_submit=hc.PBS_SUBMIT, tmp_status=hc.PBS_STATUS, tmp_delete=hc.PBS_DELETE
         )
 
     def status(self, job_id):
-        
+
         # Get the raw response
         raw = super().status(job_id=job_id)
 
@@ -241,8 +260,96 @@ class PBSClient(Client):
         parsed = json.loads(raw)
 
         # Get the status out of the job ID
-        _status = parsed.get('Jobs').get(job_id).get('job_state')
+        _status = parsed.get("Jobs").get(job_id).get("job_state")
         return hc.PBS_STATUSES[_status]
+
+    def submit(
+        self,
+        job_script: Union[str, Path],
+        directives: list = None,
+        render: bool = False,
+        dry_run: bool = False,
+        depends_on: list = None,
+        delay: Union[datetime, timedelta] = None,
+        queue: str = None,
+        walltime: timedelta = None,
+        storage: list = None,
+        **context,
+    ):
+        """Submit a job to the scheduler.
+
+        Parameters
+        ----------
+        job_script : Union[str, Path]
+            Path to the script.
+        directives : list, optional
+            List of complete directives to submit, by default list()
+        render : bool, optional
+            Render the job script from a template, by default False
+        dry_run : bool, optional
+            Return rather than executing the command, by default False
+        depends_on : list, optional
+            List of job IDs with successful exit on which this job depends, by default list()
+        delay: Union[datetime, timedelta]
+            Delay the start of this job until specific date or interval, by default None
+        queue: str, optional
+            Queue on which to submit the job, by default None
+        walltime: timedelta, optional
+            Walltime expressed as a timedelta, by default None
+        storage: list, optional
+            List of storage mounts to apply, by default None
+        **context:
+            Additional key/value pairs to be added to command/jobscript interpolation
+        """
+
+        directives = directives if isinstance(directives, list) else list()
+
+        # Add job depends
+        if depends_on:
+            depends_on = hu.ensure_list(depends_on)
+            directives.append("-W depend=afterok:" + ":".join(depends_on))
+
+        # Add delay (specified time or delta)
+        if delay:
+
+            current_time = datetime.now()
+            delay_str = None
+
+            if isinstance(delay, datetime) and delay > current_time:
+                delay_str = delay.strftime("%Y%m%d%H%M.%S")
+
+            elif isinstance(delay, timedelta) and (current_time + delay) > current_time:
+                delay_str = (current_time + delay).strftime("%Y%m%d%H%M.%S")
+            else:
+                raise ValueError(
+                    "Job submission delay argument either incorrect or puts the job in the past."
+                )
+
+            # Add the delay directive
+            directives.append(f"-a {delay_str}")
+
+        # Add queue
+        if queue:
+            directives.append(f"-q {queue}")
+
+        # Add walltime
+        if walltime:
+            _walltime = str(walltime)
+            directives.append(f"-l walltime={_walltime}")
+
+        # Add storage
+        if storage:
+            storage_str = "+".join(storage)
+            directives.append(f"-l storage={storage_str}")
+
+        # Call the super
+        return super().submit(
+            job_script=job_script,
+            directives=directives,
+            render=render,
+            dry_run=dry_run,
+            **context,
+        )
 
 
 class SlurmClient(Client):
@@ -255,12 +362,13 @@ class MockClient(Client):
         super().__init__(
             tmp_submit=hc.MOCK_SUBMIT,
             tmp_status=hc.MOCK_STATUS,
-            tmp_delete=hc.MOCK_DELETE
+            tmp_delete=hc.MOCK_DELETE,
         )
-    
+
     def status(self, job_id):
         status_code = super().status(job_id=job_id)
         return hc.MOCK_STATUSES[status_code]
+
 
 class ClientFactory:
 
@@ -278,11 +386,7 @@ class ClientFactory:
             When no scheduler can be detected.
         """
 
-        clients = dict(
-            ls=MockClient,
-            qsub=PBSClient,
-            sbatch=SlurmClient
-        )
+        clients = dict(ls=MockClient, qsub=PBSClient, sbatch=SlurmClient)
 
         # Remove the MockClient if dev mode is off
         if os.getenv("HPCPY_DEV_MODE", "0") != "1":
@@ -290,7 +394,7 @@ class ClientFactory:
 
         # Loop through the clients in order, looking for a valid scheduler
         for cmd, client in clients.items():
-            if shell(f'which {cmd}', check=False).returncode == 0:
+            if shell(f"which {cmd}", check=False).returncode == 0:
                 return client()
-        
+
         raise hx.NoClientException()
