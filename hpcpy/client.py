@@ -331,16 +331,20 @@ class PBSClient(Client):
         # Add queue
         if queue:
             directives.append(f"-q {queue}")
+            context["queue"] = queue
 
         # Add walltime
         if walltime:
             _walltime = str(walltime)
             directives.append(f"-l walltime={_walltime}")
+            context["walltime"] = _walltime
 
         # Add storage
         if storage:
             storage_str = "+".join(storage)
             directives.append(f"-l storage={storage_str}")
+            context["storage"] = storage
+            context["storage_str"] = storage_str
 
         # Call the super
         return super().submit(
