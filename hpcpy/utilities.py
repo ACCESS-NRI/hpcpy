@@ -7,7 +7,9 @@ from pathlib import Path
 from importlib import resources
 
 
-def shell(cmd, shell=True, check=True, capture_output=True, **kwargs):
+def shell(
+    cmd, shell=True, check=True, capture_output=True, **kwargs
+) -> sp.CompletedProcess:
     """Execute a shell command.
 
     Parameters
@@ -71,7 +73,7 @@ def interpolate_string_template(template, **kwargs) -> str:
     return rendered
 
 
-def interpolate_file_template(filepath, **kwargs):
+def interpolate_file_template(filepath, **kwargs) -> str:
     """Interpolate directly from a file template.
 
     Parameters
@@ -100,7 +102,7 @@ def get_installed_root() -> Path:
     return Path(resources.files("hpcpy"))
 
 
-def ensure_list(obj):
+def ensure_list(obj) -> list:
     """Ensure the object provided is a list.
 
     Parameters

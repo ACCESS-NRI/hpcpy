@@ -1,14 +1,20 @@
 """Client tests."""
 
 import pytest
-from hpcpy.client import ClientFactory
+from hpcpy import get_client
 import hpcpy.constants as hc
 import hpcpy.utilities as hu
+import os
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
+def environment():
+    os.environ["HPCPY_DEV_MODE"] = "1"
+
+
+@pytest.fixture()
 def client():
-    return ClientFactory.get_client()
+    return get_client()
 
 
 def test_get_job_script_filename(client):
