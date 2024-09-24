@@ -1,8 +1,8 @@
 """Utilities."""
 
 import subprocess as sp
-import jinja2 as j2
-import jinja2.meta as j2m
+import Jinja2 as j2
+import Jinja2.meta as j2m
 from pathlib import Path
 from importlib import resources
 
