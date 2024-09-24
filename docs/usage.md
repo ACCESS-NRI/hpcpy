@@ -4,21 +4,21 @@ The following describes the basic usage of hpcpy.
 
 ## Getting a client object
 
-As the package aspires to be "scheduler agnostic" from the outset, the recommended way to get a `Client()` object is to use the `ClientFactory()` as follows:
+As the package aspires to be "scheduler agnostic" from the outset, the recommended way to get a client object suitable for the HPC you are on is to use the `get_client()` method as follows:
 
 ```python
-from hpcpy.client import ClientFactory
-client = ClientFactory.get_client()
+from hpcpy import get_client
+client = get_client()
 ```
 
 This will return the most-likely client object based on the submission commands available on the system.
 
-In the case of the factory being unable to return an appropriate client object, you may import the client explicitly for your system.
+In the case of the factory being unable to return an appropriate client object (or if you need to be explicit), you may import the client explicitly for your system.
 
 For example:
 
 ```python
-from hpc.client import PBSClient
+from hpcpy import PBSClient
 client = PBSClient()
 ```
 

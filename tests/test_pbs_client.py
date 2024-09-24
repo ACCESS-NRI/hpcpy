@@ -1,5 +1,5 @@
 import pytest
-from hpcpy.client import PBSClient
+from hpcpy import PBSClient
 from datetime import datetime, timedelta
 
 
