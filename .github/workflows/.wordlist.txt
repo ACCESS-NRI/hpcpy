@@ -1,6 +1,7 @@
 HPCPY
 HPC
 hpcpy
+HPCpy
 pre
 py
 jobscript
