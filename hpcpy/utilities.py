@@ -5,6 +5,7 @@ import jinja2 as j2
 import jinja2.meta as j2m
 from pathlib import Path
 from importlib import resources
+import shlex
 
 
 def shell(
@@ -33,7 +34,7 @@ def shell(
     subprocess.CalledProcessError
     """
     return sp.run(
-        cmd, shell=shell, check=check, capture_output=capture_output, **kwargs
+        shlex.split(cmd), check=check, capture_output=capture_output, **kwargs
     )
 
 
