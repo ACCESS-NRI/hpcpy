@@ -27,6 +27,22 @@ class PBSClient(BaseClient):
         # Get the status out of the job ID
         _status = parsed.get("Jobs").get(job_id).get("job_state")
         return hc.PBS_STATUSES[_status]
+    
+    def _render_variables(self, variables):
+        """Render the variables flag for PBS.
+
+        Parameters
+        ----------
+        variables : dict
+            Dictionary of variables
+
+        Returns
+        -------
+        str
+            String formatted variables for PBS
+        """
+        formatted = ",".join([f"{k}={v}" for k, v in variables.items()])
+        return f"-v {formatted}"
 
     def submit(
         self,
@@ -39,6 +55,7 @@ class PBSClient(BaseClient):
         queue: str = None,
         walltime: timedelta = None,
         storage: list = None,
+        variables: dict = None,
         **context,
     ):
         """Submit a job to the scheduler.
@@ -63,6 +80,8 @@ class PBSClient(BaseClient):
             Walltime expressed as a timedelta, by default None
         storage: list, optional
             List of storage mounts to apply, by default None
+        variables: dict, optional
+            Key/value pairs added to the qsub command.
         **context:
             Additional key/value pairs to be added to command/jobscript interpolation
         """
@@ -110,6 +129,10 @@ class PBSClient(BaseClient):
             directives.append(f"-l storage={storage_str}")
             context["storage"] = storage
             context["storage_str"] = storage_str
+        
+        # Add variables
+        if isinstance(variables, dict) and len(variables) > 0:
+            directives.append(self._render_variables(variables))
 
         # Call the super
         return super().submit(
