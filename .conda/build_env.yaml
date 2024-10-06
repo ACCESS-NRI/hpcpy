@@ -10,3 +10,4 @@ dependencies:
   - anaconda-client
   - conda-build
   - versioneer
+  - jinja2
