@@ -9,7 +9,7 @@ import shlex
 
 
 def shell(
-    cmd, shell=True, check=True, capture_output=True, **kwargs
+    cmd, check=True, capture_output=True, **kwargs
 ) -> sp.CompletedProcess:
     """Execute a shell command.
 
@@ -17,8 +17,6 @@ def shell(
     ----------
     cmd : str
         Command
-    shell : bool, optional
-        Execute as shell, by default True
     check : bool, optional
         Check output, by default True
     capture_output : bool, optional
