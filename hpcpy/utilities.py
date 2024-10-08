@@ -5,10 +5,11 @@ import jinja2 as j2
 import jinja2.meta as j2m
 from pathlib import Path
 from importlib import resources
+import shlex
 
 
 def shell(
-    cmd, shell=True, check=True, capture_output=True, **kwargs
+    cmd, check=True, capture_output=True, **kwargs
 ) -> sp.CompletedProcess:
     """Execute a shell command.
 
@@ -16,8 +17,6 @@ def shell(
     ----------
     cmd : str
         Command
-    shell : bool, optional
-        Execute as shell, by default True
     check : bool, optional
         Check output, by default True
     capture_output : bool, optional
@@ -33,7 +32,7 @@ def shell(
     subprocess.CalledProcessError
     """
     return sp.run(
-        cmd, shell=shell, check=check, capture_output=capture_output, **kwargs
+        shlex.split(cmd), check=check, capture_output=capture_output, **kwargs
     )
 
 
