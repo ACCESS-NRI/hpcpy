@@ -81,7 +81,7 @@ class PBSClient(BaseClient):
         storage: list, optional
             List of storage mounts to apply, by default None
         variables: dict, optional
-            Key/value pairs added to the qsub command.
+            Key/value environment variable pairs added to the qsub command.
         **context:
             Additional key/value pairs to be added to command/jobscript interpolation
         """
