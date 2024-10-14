@@ -63,6 +63,7 @@ def test_storage(client):
 
     assert result == expected
 
+
 def test_variables(client):
     """Test passing variables to the qsub command."""
     expected = "qsub -v var1=1234,var2=abcd test.sh"
@@ -72,15 +73,12 @@ def test_variables(client):
 
     assert result == expected
 
+
 def test_variables_empty(client):
     """Test passing empty variables dict to the qsub command works as expected."""
     expected = "qsub test.sh"
-    result1 = client.submit(
-        "test.sh", dry_run=True, variables=dict()
-    )
-    result2 = client.submit(
-        "test.sh", dry_run=True
-    )
+    result1 = client.submit("test.sh", dry_run=True, variables=dict())
+    result2 = client.submit("test.sh", dry_run=True)
 
     assert result1 == expected
     assert result2 == expected

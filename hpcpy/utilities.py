@@ -8,9 +8,7 @@ from importlib import resources
 import shlex
 
 
-def shell(
-    cmd, check=True, capture_output=True, **kwargs
-) -> sp.CompletedProcess:
+def shell(cmd, check=True, capture_output=True, **kwargs) -> sp.CompletedProcess:
     """Execute a shell command.
 
     Parameters

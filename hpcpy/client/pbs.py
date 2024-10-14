@@ -27,7 +27,7 @@ class PBSClient(BaseClient):
         # Get the status out of the job ID
         _status = parsed.get("Jobs").get(job_id).get("job_state")
         return hc.PBS_STATUSES[_status]
-    
+
     def _render_variables(self, variables):
         """Render the variables flag for PBS.
 
@@ -129,7 +129,7 @@ class PBSClient(BaseClient):
             directives.append(f"-l storage={storage_str}")
             context["storage"] = storage
             context["storage_str"] = storage_str
-        
+
         # Add variables
         if isinstance(variables, dict) and len(variables) > 0:
             directives.append(self._render_variables(variables))

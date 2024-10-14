@@ -2,8 +2,6 @@
 
 from hpcpy.client.pbs import PBSClient
 from hpcpy.client.slurm import SlurmClient
-from hpcpy.client.mock import MockClient
-import os
 import hpcpy.exceptions as hx
 from hpcpy.utilities import shell
 from typing import Union
@@ -11,7 +9,7 @@ from typing import Union
 
 class ClientFactory:
 
-    def get_client(*args, **kwargs) -> Union[PBSClient, SlurmClient, MockClient]:
+    def get_client(*args, **kwargs) -> Union[PBSClient, SlurmClient]:
         """Get a client object based on what kind of scheduler we are using.
 
         Arguments:
@@ -21,7 +19,7 @@ class ClientFactory:
 
         Returns
         -------
-        Union[PBSClient, SlurmClient, MockClient]
+        Union[PBSClient, SlurmClient]
             Client object suitable for the detected scheduler.
 
         Raises
@@ -30,11 +28,7 @@ class ClientFactory:
             When no scheduler can be detected.
         """
 
-        clients = dict(ls=MockClient, qsub=PBSClient, sbatch=SlurmClient)
-
-        # Remove the MockClient if dev mode is off
-        if os.getenv("HPCPY_DEV_MODE", "0") != "1":
-            _ = clients.pop("ls")
+        clients = dict(qsub=PBSClient, sbatch=SlurmClient)
 
         # Loop through the clients in order, looking for a valid scheduler
         for cmd, client in clients.items():

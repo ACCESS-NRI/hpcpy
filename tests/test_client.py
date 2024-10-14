@@ -2,7 +2,6 @@
 
 import pytest
 from hpcpy import get_client
-import hpcpy.constants as hc
 import hpcpy.utilities as hu
 import os
 
@@ -26,24 +25,6 @@ def test_get_job_script_filename(client):
     )
     assert result != input_filename
     assert len(result) == len(input_filename) + hash_length + 1  # underscore
-
-
-def test_submit(client):
-    """Test submit."""
-    result = client.submit("test.txt")
-    assert result == "12345"
-
-
-def test_status(client):
-    """Test status."""
-    result = client.status("12345")
-    assert result == hc.STATUS_QUEUED
-
-
-def test_delete(client):
-    """Test delete."""
-    result = client.delete("12345")
-    assert result == "DELETED"
 
 
 def test_render_job_script(client):
