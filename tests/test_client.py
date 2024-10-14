@@ -1,7 +1,7 @@
 """Client tests."""
 
 import pytest
-from hpcpy import get_client
+from hpcpy import PBSClient
 import hpcpy.utilities as hu
 import os
 
@@ -13,7 +13,7 @@ def environment():
 
 @pytest.fixture()
 def client():
-    return get_client()
+    return PBSClient()
 
 
 def test_get_job_script_filename(client):
