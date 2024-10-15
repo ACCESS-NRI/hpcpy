@@ -1,6 +1,6 @@
 # Usage
 
-The following describes the basic usage of hpcpy.
+The following describes the basic usage of HPCpy.
 
 ## Getting a client object
 
@@ -44,7 +44,7 @@ The simplest way to submit a pre-written job script is via the `submit()` comman
 
 ### Environment Variables
 
-=== "HPCPy (Python)"
+=== "HPCpy (Python)"
     ```python
     job_id = client.submit(
         "/path/to/script.sh",
@@ -104,7 +104,7 @@ job_script_filepath = client._render_job_script(
 
 Checking the status of a job that has been submitted requires the `job_id` of the job on on the scheduler. Using the `submit()` command as above will return this identifier for use with the client.
 
-=== "HPCPy (Python)"
+=== "HPCpy (Python)"
     ```python
     status = client.status(job_id)
     ```
@@ -133,7 +133,7 @@ More shorthand methods will be made available as required.
 
 Deleting a job on the system requires only the `job_id` of the job on the scheduler
 
-=== "HPCPy (Python)"
+=== "HPCpy (Python)"
     ```python
     client.delete(job_id)
     ```
