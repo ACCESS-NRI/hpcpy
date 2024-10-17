@@ -5,6 +5,7 @@ import jinja2 as j2
 import jinja2.meta as j2m
 from pathlib import Path
 from importlib import resources
+from hpcpy.exceptions import ShellException
 import shlex
 
 
@@ -27,11 +28,19 @@ def shell(cmd, check=True, capture_output=True, **kwargs) -> sp.CompletedProcess
 
     Raises
     ------
-    subprocess.CalledProcessError
+    hpcypy.excetions.ShellException :
+        When the shell call fails.
     """
-    return sp.run(
-        shlex.split(cmd), check=check, capture_output=capture_output, **kwargs
-    )
+    try:
+        return sp.run(
+            shlex.split(cmd),
+            shell=True,
+            check=check,
+            capture_output=capture_output,
+            **kwargs,
+        )
+    except sp.CalledProcessError as ex:
+        raise ShellException(ex)
 
 
 def interpolate_string_template(template, **kwargs) -> str:

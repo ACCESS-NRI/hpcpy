@@ -115,7 +115,6 @@ class BaseClient:
         job_id : str
             Job ID.
         """
-        # raise NotImplementedError()
         cmd = self._tmp_status.format(job_id=job_id)
         result = self._shell(cmd)
         return result
@@ -171,11 +170,15 @@ class BaseClient:
             Command to run.
         decode : bool
             Automatically decode response with utf-8, defaults to True
+        Raises
+        ------
+        hpcypy.excetions.ShellException :
+            When the underlying shell call fails.
 
         Returns
         -------
-        _type_
-            _description_
+        str
+            Result from the underlying called command.
         """
         result = shell(cmd)
 
