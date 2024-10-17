@@ -172,7 +172,7 @@ class BaseClient:
             Automatically decode response with utf-8, defaults to True
         Raises
         ------
-        hpcypy.excetions.ShellException :
+        hpcpy.exceptions.ShellException :
             When the underlying shell call fails.
 
         Returns
