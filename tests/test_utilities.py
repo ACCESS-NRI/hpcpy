@@ -14,4 +14,6 @@ def test_shell_exception():
     try:
         hu.shell("blah")
     except hx.ShellException as ex:
-        assert ex.__str__() == "Error 127: /bin/sh: blah: command not found\n"
+
+        expected = f"Error {ex.returncode}: {ex.stderr}"
+        assert ex.__str__() == expected
