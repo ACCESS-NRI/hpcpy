@@ -28,7 +28,7 @@ def shell(cmd, check=True, capture_output=True, **kwargs) -> sp.CompletedProcess
 
     Raises
     ------
-    hpcypy.excetions.ShellException :
+    hpcpy.exceptions.ShellException :
         When the shell call fails.
     """
     try:
