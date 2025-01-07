@@ -5,19 +5,17 @@ import jinja2 as j2
 import jinja2.meta as j2m
 from pathlib import Path
 from importlib import resources
+from hpcpy.exceptions import ShellException
+import shlex
 
 
-def shell(
-    cmd, shell=True, check=True, capture_output=True, **kwargs
-) -> sp.CompletedProcess:
+def shell(cmd, check=True, capture_output=True, **kwargs) -> sp.CompletedProcess:
     """Execute a shell command.
 
     Parameters
     ----------
     cmd : str
         Command
-    shell : bool, optional
-        Execute as shell, by default True
     check : bool, optional
         Check output, by default True
     capture_output : bool, optional
@@ -30,11 +28,19 @@ def shell(
 
     Raises
     ------
-    subprocess.CalledProcessError
+    hpcpy.exceptions.ShellException :
+        When the shell call fails.
     """
-    return sp.run(
-        cmd, shell=shell, check=check, capture_output=capture_output, **kwargs
-    )
+    try:
+        return sp.run(
+            shlex.split(cmd),
+            shell=True,
+            check=check,
+            capture_output=capture_output,
+            **kwargs,
+        )
+    except sp.CalledProcessError as ex:
+        raise ShellException(ex)
 
 
 def interpolate_string_template(template, **kwargs) -> str:

@@ -40,11 +40,3 @@ PBS_STATUSES = dict(
 PBS_SUBMIT = "qsub{directives} {job_script}"
 PBS_STATUS = "qstat -f -F json {job_id}"
 PBS_DELETE = "qdel {job_id}"
-
-# Mock command templateds
-MOCK_SUBMIT = "echo 12345"
-MOCK_STATUS = "echo Q"
-MOCK_DELETE = 'echo "DELETED"'
-
-# Mock status translation
-MOCK_STATUSES = PBS_STATUSES
