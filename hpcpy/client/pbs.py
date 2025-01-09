@@ -13,10 +13,25 @@ class PBSClient(BaseClient):
 
         # Set up the templates
         super().__init__(
-            tmp_submit=hc.PBS_SUBMIT, tmp_status=hc.PBS_STATUS, tmp_delete=hc.PBS_DELETE
+            cmd_templates=hc.PBS_COMMANDS, 
+            statuses=hc.PBS_STATUSES,
+            status_attribute="short",
+            *args, **kwargs
         )
 
     def status(self, job_id):
+        """Get the status of a job.
+
+        Parameters
+        ----------
+        job_id : str
+            Job ID.
+
+        Returns
+        -------
+        str
+            Generic status code.
+        """
 
         # Get the raw response
         raw = super().status(job_id=job_id)
@@ -26,7 +41,12 @@ class PBSClient(BaseClient):
 
         # Get the status out of the job ID
         _status = parsed.get("Jobs").get(job_id).get("job_state")
-        return hc.PBS_STATUSES[_status]
+
+        # Get the native status by looking it up using the parent class.
+        status_native = super()._lookup_status(_status)
+
+        # Return the generic status
+        return status_native.generic
 
     def _render_variables(self, variables):
         """Render the variables flag for PBS.

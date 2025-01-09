@@ -12,26 +12,25 @@ import pandas as pd
 class BaseClient:
     """A base class from which all others inherit."""
 
-    def __init__(self, tmp_submit, tmp_status, tmp_delete, job_script_expiry="1H"):
+    def __init__(self, cmd_templates, statuses, status_attribute, job_script_expiry="1H"):
         """Constructor.
 
         Parameters
         ----------
-        tmp_submit : str
-            Submit command template.
-        tmp_status : str
-            Status command template.
-        tmp_delete : str
-            Delete command template.
+        cmd_templates : dict
+            Dictionary of command templates.
+        statuses : list
+            List of statuses.
+        status_attribute : str
+            Attribute to use for status lookup.
         job_script_expiry : str, optional
             Job script expiry interval, by default "1H"
         """
 
         # Set the command templates
-        self._tmp_submit = tmp_submit
-        self._tmp_status = tmp_status
-        self._tmp_delete = tmp_delete
+        self.cmd_templates = cmd_templates
         self.job_script_expiry = job_script_expiry
+        self.statuses = statuses
 
     def _clean_rendered_job_scripts(self) -> None:
         """Clean the rendered job scripts from the JOB_SCRIPT_DIR."""
@@ -98,7 +97,7 @@ class BaseClient:
         context["directives"] = self._render_directives(directives)
 
         context["job_script"] = _job_script
-        cmd = self._tmp_submit.format(**context)
+        cmd = self.cmd_templates['submit'].format(**context)
 
         # Just return the command string for the user without submitting
         if dry_run:
@@ -115,7 +114,7 @@ class BaseClient:
         job_id : str
             Job ID.
         """
-        cmd = self._tmp_status.format(job_id=job_id)
+        cmd = self.cmd_templates['status'].format(job_id=job_id)
         result = self._shell(cmd)
         return result
 
@@ -127,7 +126,7 @@ class BaseClient:
         job_id : str
             Job ID.
         """
-        cmd = self._tmp_delete.format(job_id=job_id)
+        cmd = self.cmd_templates['delete'].format(job_id=job_id)
         result = self._shell(cmd)
         return result
 
@@ -254,3 +253,28 @@ class BaseClient:
             return ""
 
         return " " + " ".join(directives)
+    
+    def _lookup_status(self, status):
+        """Lookup a status in the statuses list.
+
+        Parameters
+        ----------
+        status : str
+            Raw status code from the scheduler.
+
+        Returns
+        -------
+        hpcpy.status.Status
+            Status object.
+
+        Raises
+        ------
+        ValueError
+            When the status is not found in the statuses list.
+        """
+
+        for _status in self.statuses:
+            if getattr(_status, self.status_attribute) == status:
+                return _status
+        
+        raise ValueError(f"Status {status} not found in statuses.")
