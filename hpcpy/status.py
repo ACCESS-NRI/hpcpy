@@ -6,4 +6,4 @@ class Status:
         self.short = short
         self.long = long
         self.description = description
-        self.generic = generic
+        self.status = generic

@@ -31,6 +31,7 @@ class BaseClient:
         self.cmd_templates = cmd_templates
         self.job_script_expiry = job_script_expiry
         self.statuses = statuses
+        self.status_attribute = status_attribute
 
     def _clean_rendered_job_scripts(self) -> None:
         """Clean the rendered job scripts from the JOB_SCRIPT_DIR."""
@@ -253,28 +254,27 @@ class BaseClient:
             return ""
 
         return " " + " ".join(directives)
-    
-    def _lookup_status(self, status):
-        """Lookup a status in the statuses list.
+
+    def hold(self, job_id):
+        """Hold a job.
 
         Parameters
         ----------
-        status : str
-            Raw status code from the scheduler.
-
-        Returns
-        -------
-        hpcpy.status.Status
-            Status object.
-
-        Raises
-        ------
-        ValueError
-            When the status is not found in the statuses list.
+        job_id : str
+            Job ID.
         """
+        cmd = self.cmd_templates['hold'].format(job_id=job_id)
+        result = self._shell(cmd)
+        return result
 
-        for _status in self.statuses:
-            if getattr(_status, self.status_attribute) == status:
-                return _status
-        
-        raise ValueError(f"Status {status} not found in statuses.")
+    def release(self, job_id):
+        """Release a job.
+
+        Parameters
+        ----------
+        job_id : str
+            Job ID.
+        """
+        cmd = self.cmd_templates['release'].format(job_id=job_id)
+        result = self._shell(cmd)
+        return result

@@ -97,7 +97,7 @@ def interpolate_file_template(filepath, **kwargs) -> str:
 
 
 def get_installed_root() -> Path:
-    """Get the installed root of the benchcab installation.
+    """Get the installed root of the hpcpy installation.
 
     Returns
     -------

@@ -21,22 +21,6 @@ STATUS_SUBJOB_COMPLETED = "X"
 STATUS_SUSPENDED = "S"
 STATUS_WAITING = "W"
 
-# # PBS status translation
-# PBS_STATUSES = dict(
-#     B=STATUS_HAS_SUBJOB,
-#     E=STATUS_EXITING,
-#     F=STATUS_FINISHED,
-#     H=STATUS_HELD,
-#     M=STATUS_MOVED,
-#     Q=STATUS_QUEUED,
-#     R=STATUS_RUNNING,
-#     S=STATUS_SUSPENDED,
-#     T=STATUS_MOVING,
-#     U=STATUS_CYCLE_HARVESTING,
-#     W=STATUS_WAITING,
-#     X=STATUS_SUBJOB_COMPLETED,
-# )
-
 # PBS command templates
 PBS_COMMANDS = dict(
     submit="qsub{directives} {job_script}",
@@ -56,7 +40,7 @@ SLURM_COMMANDS = dict(
 )
 
 # SLURM status codes
-SLURM_STATUSES = list(
+SLURM_STATUSES = [
     Status("BF", "BOOT_FAIL", "Job terminated due to launch failure, typically due to a hardware failure (e.g. unable to boot the node or block and the job can not be requeued)."),
     Status("CA", "CANCELLED", "Job was explicitly cancelled by the user or system administrator.  The job may or may not have been initiated."),
     Status("CD", "COMPLETED", "Job has terminated all processes on all nodes with an exit code of zero.", generic=STATUS_FINISHED),
@@ -81,10 +65,10 @@ SLURM_STATUSES = list(
     Status("ST", "STOPPED", "Job has an allocation, but execution has been stopped with SIGSTOP signal.  CPUS have been retained by this job."),
     Status("S", "SUSPENDED", "Job has an allocation, but execution has been suspended and CPUs have been released for other jobs.", generic=STATUS_SUSPENDED),
     Status("TO", "TIMEOUT", "Job terminated upon reaching its time limit.")
-)
+]
 
 # PBS status codes
-PBS_STATUSES = list(
+PBS_STATUSES = [
     Status("B", None, "Array job has at least one subjob running", generic=STATUS_HAS_SUBJOB),
     Status("E", None, "Job is exiting after having run", generic=STATUS_EXITING),
     Status("F", None, "Job is finished", generic=STATUS_FINISHED),
@@ -97,4 +81,4 @@ PBS_STATUSES = list(
     Status("U", None, "Cycle-harvesting job is suspended due to keyboard activity", generic=STATUS_CYCLE_HARVESTING),
     Status("W", None, "Job is waiting for its submitter-assigned start time to be reached", generic=STATUS_WAITING),
     Status("X", None, "Subjob has completed execution or has been deleted", generic=STATUS_SUBJOB_COMPLETED)
-)
+]

@@ -1,5 +1,8 @@
 import pytest
 from hpcpy import PBSClient
+import hpcpy.utilities as hu
+import hpcpy.constants as hc
+from hpcpy.job import Job
 from datetime import datetime, timedelta
 
 
@@ -7,6 +10,13 @@ from datetime import datetime, timedelta
 def client():
     return PBSClient()
 
+@pytest.fixture
+def status_json():
+    return open(hu.get_installed_root() / "data" / "test" / "status-pbs.json", "rb").read()
+
+@pytest.fixture
+def job_id():
+    return "132058409.gadi-pbs"
 
 def test_directives(client):
     """Test if the directives are properly interpolated"""
@@ -82,3 +92,43 @@ def test_variables_empty(client):
 
     assert result1 == expected
     assert result2 == expected
+
+
+def test_submit(fp, client, status_json, job_id):
+    """Test if the submit command is executed."""
+    job_script = "test.sh"
+
+    # Register the qsub command
+    fp.register(
+        f"qsub {job_script}".split(),
+        stdout=job_id
+    )
+
+    # Register the qstat command
+    fp.register(
+        f"qstat -f -F json {job_id}".split(),
+        stdout=status_json
+    )
+
+    # Submit the job, should return a job object
+    job = client.submit(job_script)
+
+    # Assert that the job object is correct
+    assert isinstance(job, Job)
+    
+    # Assert that the job ID is correct
+    assert job_id == job.id
+
+
+def test_status(fp, client, status_json, job_id):
+    """Test if the status command is executed as expected."""
+
+    # Register the qstat command
+    fp.register(
+        f"qstat -f -F json {job_id}".split(),
+        stdout=status_json
+    )
+
+    # Get the generic status of the job
+    status = client.status(job_id)[0]
+    assert status == hc.STATUS_QUEUED

@@ -1,4 +1,5 @@
 from hpcpy.client.base import BaseClient
+from hpcpy.job import Job
 import hpcpy.constants as hc
 import hpcpy.utilities as hu
 from datetime import datetime, timedelta
@@ -36,17 +37,11 @@ class PBSClient(BaseClient):
         # Get the raw response
         raw = super().status(job_id=job_id)
 
-        # Convert to JSON
-        parsed = json.loads(raw)
-
-        # Get the status out of the job ID
-        _status = parsed.get("Jobs").get(job_id).get("job_state")
-
-        # Get the native status by looking it up using the parent class.
-        status_native = super()._lookup_status(_status)
+        # Parse the status as per this implementation
+        generic_status, native_full = self._parse_status(raw, job_id)
 
         # Return the generic status
-        return status_native.generic
+        return generic_status, native_full
 
     def _render_variables(self, variables):
         """Render the variables flag for PBS.
@@ -55,7 +50,7 @@ class PBSClient(BaseClient):
         ----------
         variables : dict
             Dictionary of variables
-
+    
         Returns
         -------
         str
@@ -104,6 +99,11 @@ class PBSClient(BaseClient):
             Key/value environment variable pairs added to the qsub command.
         **context:
             Additional key/value pairs to be added to command/jobscript interpolation
+        
+        Returns
+        -------
+        Job : hpypy.job.Job
+            Job object.
         """
 
         directives = directives if isinstance(directives, list) else list()
@@ -155,10 +155,47 @@ class PBSClient(BaseClient):
             directives.append(self._render_variables(variables))
 
         # Call the super
-        return super().submit(
+        job_id = super().submit(
             job_script=job_script,
             directives=directives,
             render=render,
             dry_run=dry_run,
             **context,
         )
+
+        if dry_run:
+            return job_id
+
+        # Return the job object
+        return Job(id=job_id, client=self)
+
+    def _parse_status(self, raw, job_id):
+        """Extract the status from the raw response.
+
+        Parameters
+        ----------
+        raw : str
+            Raw response from the scheduler.
+
+        Returns
+        -------
+        str
+            Status code.
+        """
+        # Convert to JSON
+        parsed = json.loads(raw)
+
+        # Get the status out of the job ID
+        native_full = parsed.get("Jobs").get(job_id)
+        native_status = native_full.get("job_state")
+
+        # Set the generic status attribute
+        generic_status = None
+
+        for s in self.statuses:
+            if native_status == s.short:
+                generic_status = s.status
+                break
+
+        # Return the generic status
+        return generic_status, native_full
