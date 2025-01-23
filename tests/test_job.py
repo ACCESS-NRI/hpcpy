@@ -2,6 +2,7 @@
 import pytest
 import hpcpy.utilities as hu
 import hpcpy.constants as hc
+import hpcpy.constants.pbs as hcp
 from hpcpy.job import Job
 from hpcpy import PBSClient
 
@@ -29,13 +30,13 @@ def test_status(fp, client, status_json, job_id, job_status):
     """Test Job.status()."""
 
     fp.register(
-        hc.PBS_COMMANDS["status"].format(job_id=job_id).split(),
+        hcp.COMMANDS["status"].format(job_id=job_id).split(),
         stdout=status_json,
         occurrences=2
     )
 
     # Test that the status is collected on instantiation
-    job = Job(job_id, client)
+    job = Job(job_id, client, auto_update=True)
     assert job._status == job_status
 
     # Test that the status is updated explicitly
@@ -46,7 +47,7 @@ def test_hold(fp, client, status_json, status_json_held, job_id):
     """Test Job.hold()."""
 
     fp.register(
-        hc.PBS_COMMANDS["status"].format(job_id=job_id).split(),
+        hcp.COMMANDS["status"].format(job_id=job_id).split(),
         stdout=status_json,
     )
 
@@ -56,12 +57,12 @@ def test_hold(fp, client, status_json, status_json_held, job_id):
 
     # Register the hold command
     fp.register(
-        hc.PBS_COMMANDS["hold"].format(job_id=job_id).split(),
+        hcp.COMMANDS["hold"].format(job_id=job_id).split(),
         stdout=b""
     )
 
     fp.register(
-        hc.PBS_COMMANDS["status"].format(job_id=job_id).split(),
+        hcp.COMMANDS["status"].format(job_id=job_id).split(),
         stdout=status_json_held
     )
 
@@ -70,9 +71,10 @@ def test_hold(fp, client, status_json, status_json_held, job_id):
     assert job._status == hc.STATUS_HELD
 
 def test_release(fp, client, status_json, status_json_held, job_id):
+    """Test Job.release()."""
 
     fp.register(
-        hc.PBS_COMMANDS["status"].format(job_id=job_id).split(),
+        hcp.COMMANDS["status"].format(job_id=job_id).split(),
         stdout=status_json_held,
     )
 
@@ -84,13 +86,13 @@ def test_release(fp, client, status_json, status_json_held, job_id):
 
     # Register the release command
     fp.register(
-        hc.PBS_COMMANDS["release"].format(job_id=job_id).split(),
+        hcp.COMMANDS["release"].format(job_id=job_id).split(),
         stdout=b""
     )
 
     # Register the status command with a queued state
     fp.register(
-        hc.PBS_COMMANDS["status"].format(job_id=job_id).split(),
+        hcp.COMMANDS["status"].format(job_id=job_id).split(),
         stdout=status_json
     )
 
@@ -99,9 +101,10 @@ def test_release(fp, client, status_json, status_json_held, job_id):
     assert job._status == hc.STATUS_QUEUED
 
 def test_delete(fp, client, status_json, job_id):
+    """Test Job.delete()."""
     
     fp.register(
-        hc.PBS_COMMANDS["status"].format(job_id=job_id).split(),
+        hcp.COMMANDS["status"].format(job_id=job_id).split(),
         stdout=status_json,
     )
 
@@ -111,7 +114,7 @@ def test_delete(fp, client, status_json, job_id):
 
     # Register the delete command
     fp.register(
-        hc.PBS_COMMANDS["delete"].format(job_id=job_id).split(),
+        hcp.COMMANDS["delete"].format(job_id=job_id).split(),
         stdout=b""
     )
 

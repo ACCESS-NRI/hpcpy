@@ -1,18 +1,27 @@
 """Base client object."""
 
-from hpcpy.utilities import shell, interpolate_file_template
+from hpcpy.utilities import shell, interpolate_file_template, ensure_list
 import hpcpy.constants as hc
 from random import choice
 from string import ascii_uppercase
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import pandas as pd
 
 
 class BaseClient:
     """A base class from which all others inherit."""
 
-    def __init__(self, cmd_templates, statuses, status_attribute, job_script_expiry="1H"):
+    def __init__(
+        self, 
+        cmd_templates,
+        directive_templates,
+        statuses,
+        status_attribute,
+        job_script_expiry="1H",
+        delay_directive_fmt="-a %Y%m%d%H%M.%S",
+        depends_directive_fmt="-W depend=afterok:{depends_on_str}",
+    ):
         """Constructor.
 
         Parameters
@@ -32,6 +41,9 @@ class BaseClient:
         self.job_script_expiry = job_script_expiry
         self.statuses = statuses
         self.status_attribute = status_attribute
+        self.delay_directive_fmt = delay_directive_fmt
+        self.depends_directive_fmt = depends_directive_fmt
+        self.directive_templates = directive_templates
 
     def _clean_rendered_job_scripts(self) -> None:
         """Clean the rendered job scripts from the JOB_SCRIPT_DIR."""
@@ -278,3 +290,58 @@ class BaseClient:
         cmd = self.cmd_templates['release'].format(job_id=job_id)
         result = self._shell(cmd)
         return result
+
+    def _assemble_delay_directive(self, delay) -> str:
+        """Assemble the delay directive for the scheduler.
+
+        Parameters
+        ----------
+        delay : datetime or timedelta
+            Either a specific datetime or delta from now.
+
+        Returns
+        -------
+        str
+            Formatted delay directive for the current scheduler.
+
+        Raises
+        ------
+        ValueError
+            When the delay argument is incorrect or puts the job in the past.
+        """
+
+        current_time = datetime.now()
+        delay_directive = None
+
+        if isinstance(delay, datetime) and delay > current_time:
+            delay_directive = delay.strftime(self.delay_directive_fmt)
+
+        elif isinstance(delay, timedelta) and (current_time + delay) > current_time:
+            delay_directive = (current_time + delay).strftime(self.delay_directive_fmt)
+        else:
+            raise ValueError(
+                "Job submission delay argument either incorrect or puts the job in the past."
+            )
+        
+        return delay_directive
+    
+    def _interpolate_directive(self, directives, key, **kwargs):
+
+        directives.append(self.directive_templates[key].format(**kwargs))
+        return directives
+
+    # def _assemble_depends_directive(self, depends_on_str) -> str:
+    #     """Assemble the depends directive for the scheduler.
+
+    #     Parameters
+    #     ----------
+    #     depends_on_str : str
+    #         List of job IDs to depend on.
+
+    #     Returns
+    #     -------
+    #     str
+    #         Formatted depends directive for the current scheduler.
+    #     """
+    #     # depends_on_str = ":".join(ensure_list(depends_on))
+    #     return self.depends_directive_fmt.format(depends_on_str=depends_on_str)

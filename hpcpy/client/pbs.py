@@ -1,5 +1,6 @@
 from hpcpy.client.base import BaseClient
 from hpcpy.job import Job
+from hpcpy.constants.pbs import COMMANDS, DIRECTIVES, STATUSES
 import hpcpy.constants as hc
 import hpcpy.utilities as hu
 from datetime import datetime, timedelta
@@ -14,9 +15,11 @@ class PBSClient(BaseClient):
 
         # Set up the templates
         super().__init__(
-            cmd_templates=hc.PBS_COMMANDS, 
-            statuses=hc.PBS_STATUSES,
+            cmd_templates=COMMANDS, 
+            directive_templates=DIRECTIVES,
+            statuses=STATUSES,
             status_attribute="short",
+            delay_directive_fmt="-a %Y%m%d%H%M.%S",
             *args, **kwargs
         )
 
@@ -102,39 +105,24 @@ class PBSClient(BaseClient):
         
         Returns
         -------
-        Job : hpypy.job.Job
+        Job : hpcpy.job.Job
             Job object.
         """
 
-        directives = directives if isinstance(directives, list) else list()
+        directives = directives if isinstance(directives, list) else []
 
         # Add job depends
         if depends_on:
-            depends_on = hu.ensure_list(depends_on)
-            directives.append("-W depend=afterok:" + ":".join(depends_on))
+            directives = self._interpolate_directive(directives, "depends_on", depends_on_str=":".join(hu.ensure_list(depends_on)))
 
         # Add delay (specified time or delta)
         if delay:
-
-            current_time = datetime.now()
-            delay_str = None
-
-            if isinstance(delay, datetime) and delay > current_time:
-                delay_str = delay.strftime("%Y%m%d%H%M.%S")
-
-            elif isinstance(delay, timedelta) and (current_time + delay) > current_time:
-                delay_str = (current_time + delay).strftime("%Y%m%d%H%M.%S")
-            else:
-                raise ValueError(
-                    "Job submission delay argument either incorrect or puts the job in the past."
-                )
-
-            # Add the delay directive
-            directives.append(f"-a {delay_str}")
+            delay_directive = self._assemble_delay_directive(delay)
+            directives.append(delay_directive)
 
         # Add queue
         if queue:
-            directives.append(f"-q {queue}")
+            directives = self._interpolate_directive(directives, "queue", queue=queue)
             context["queue"] = queue
 
         # Add walltime
