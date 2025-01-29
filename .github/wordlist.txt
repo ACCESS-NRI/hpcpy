@@ -13,3 +13,5 @@ SLURM
 hpcpy
 readthedocs
 io
+generalise
+generalised
