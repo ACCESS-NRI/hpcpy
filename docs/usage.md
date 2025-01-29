@@ -27,7 +27,7 @@ client_slurm = SLURMClient()
 
 The simplest way to submit a pre-written job script is via the `submit()` command, which executes the appropriate command for the scheduler:
 
-=== "HPCPy (Python)"
+=== "HPCpy (Python)"
     ```python
     job_id = client.submit("/path/to/script.sh")
     ```
@@ -146,7 +146,7 @@ Deleting a job on the system requires only the `job_id` of the job on the schedu
 
 HPCpy implements a simple task-dependence strategy at the scheduler level, whereby, we can use scheduler directives to make one job dependent on another.
 
-=== "HPCPy (Python)"
+=== "HPCpy (Python)"
     ```python
     job1 = client.submit("job1.sh")
     job2 = client.submit("job2.sh", depends_on=job1)
