@@ -3,7 +3,6 @@
 from hpcpy.client.base import BaseClient
 from hpcpy.job import Job
 from hpcpy.constants.slurm import COMMANDS, STATUSES, DIRECTIVES
-import hpcpy.constants as hc
 import hpcpy.utilities as hu
 from datetime import datetime, timedelta
 from typing import Union
@@ -17,12 +16,13 @@ class SlurmClient(BaseClient):
 
         # Set up the templates
         super().__init__(
-            cmd_templates=COMMANDS, 
+            cmd_templates=COMMANDS,
             directive_templates=DIRECTIVES,
             statuses=STATUSES,
             status_attribute="short",
-            delay_directive_fmt="-a %Y%m%d%H%M.%S",
-            *args, **kwargs
+            delay_directive_fmt="%Y-%m-%dT%H:%M:%S",
+            *args,
+            **kwargs,
         )
 
     def status(self, job_id):
@@ -55,7 +55,7 @@ class SlurmClient(BaseClient):
         ----------
         variables : dict
             Dictionary of variables
-    
+
         Returns
         -------
         str
@@ -74,7 +74,6 @@ class SlurmClient(BaseClient):
         delay: Union[datetime, timedelta] = None,
         queue: str = None,
         walltime: timedelta = None,
-        storage: list = None,
         variables: dict = None,
         **context,
     ):
@@ -98,13 +97,11 @@ class SlurmClient(BaseClient):
             Queue on which to submit the job, by default None
         walltime: timedelta, optional
             Walltime expressed as a timedelta, by default None
-        storage: list, optional
-            List of storage mounts to apply, by default None
         variables: dict, optional
             Key/value environment variable pairs added to the qsub command.
         **context:
             Additional key/value pairs to be added to command/jobscript interpolation
-        
+
         Returns
         -------
         Job : hpcpy.job.Job
@@ -115,7 +112,11 @@ class SlurmClient(BaseClient):
 
         # Add job depends
         if depends_on:
-            directives = self._interpolate_directive(directives, "depends_on", depends_on_str=":".join(hu.ensure_list(depends_on)))
+            directives = self._interpolate_directive(
+                directives,
+                "depends_on",
+                depends_on_str=":".join(hu.ensure_list(depends_on)),
+            )
 
         # Add delay (specified time or delta)
         if delay:
@@ -129,20 +130,10 @@ class SlurmClient(BaseClient):
 
         # Add walltime
         if walltime:
-            _walltime = str(walltime)
-            directives.append(f"-l walltime={_walltime}")
-            context["walltime"] = _walltime
-
-        # Add storage
-        if storage:
-            storage_str = "+".join(storage)
-            directives.append(f"-l storage={storage_str}")
-            context["storage"] = storage
-            context["storage_str"] = storage_str
-
-        # Add variables
-        if isinstance(variables, dict) and len(variables) > 0:
-            directives.append(self._render_variables(variables))
+            walltime_str = str(int(walltime.total_seconds() / 60.0))
+            directives = self._interpolate_directive(
+                directives, "walltime", walltime_str=walltime_str
+            )
 
         # Call the super
         job_id = super().submit(
@@ -150,6 +141,7 @@ class SlurmClient(BaseClient):
             directives=directives,
             render=render,
             dry_run=dry_run,
+            env=variables,
             **context,
         )
 
@@ -183,7 +175,7 @@ class SlurmClient(BaseClient):
         # Get the status from the first job
         native_full = parsed.get("jobs")[0]
         native_status = native_full.get("job_state")[0]
-        
+
         # Set the default generic status to None
         generic_status = None
 
@@ -192,8 +184,9 @@ class SlurmClient(BaseClient):
             if native_status == s.long:
                 generic_status = s.status
                 break
-        
+
         return generic_status, native_full
+
 
 # from hpcpy.client.base import BaseClient
 # import hpcpy.constants as hc
@@ -213,7 +206,7 @@ class SlurmClient(BaseClient):
 #             status_attribute="long",
 #             *args, **kwargs
 #         )
-    
+
 #     def submit(
 #         self,
 #         job_script: Union[str, Path],
@@ -229,12 +222,10 @@ class SlurmClient(BaseClient):
 #         **context,
 #     ):
 #         directives = directives if isinstance(directives, list) else []
-        
+
 #         # Add dependencies
 #         if depends_on:
 #             directives.append(f"--dependency=afterok:" + ":".join(depends_on))
-
-        
 
 
 #     def status(self, job_id):
@@ -252,7 +243,7 @@ class SlurmClient(BaseClient):
 #         """
 #         raw = super().status(job_id=job_id)
 #         return self._parse_status(raw, job_id)
-    
+
 #     def _parse_status(self, raw, job_id):
 #         """Extract the statue from the raw response.
 
@@ -277,7 +268,7 @@ class SlurmClient(BaseClient):
 #         # Get the status from the first job
 #         native_full = parsed.get("jobs")[0]
 #         native_status = native_full.get("job_state")[0]
-        
+
 #         # Set the default generic status to None
 #         generic_status = None
 
@@ -286,5 +277,5 @@ class SlurmClient(BaseClient):
 #             if native_status == s.long:
 #                 generic_status = s.status
 #                 break
-        
+
 #         return generic_status, native_full

@@ -1,6 +1,6 @@
 """Base client object."""
 
-from hpcpy.utilities import shell, interpolate_file_template, ensure_list
+from hpcpy.utilities import shell, interpolate_file_template
 import hpcpy.constants as hc
 from random import choice
 from string import ascii_uppercase
@@ -13,7 +13,7 @@ class BaseClient:
     """A base class from which all others inherit."""
 
     def __init__(
-        self, 
+        self,
         cmd_templates,
         directive_templates,
         statuses,
@@ -81,7 +81,13 @@ class BaseClient:
         return [hc.JOB_SCRIPT_DIR / rjs for rjs in os.listdir(hc.JOB_SCRIPT_DIR)]
 
     def submit(
-        self, job_script, directives=list(), render=False, dry_run=False, **context
+        self,
+        job_script,
+        directives=list(),
+        render=False,
+        dry_run=False,
+        env=None,
+        **context,
     ) -> str:
         """Submit the job script.
 
@@ -92,6 +98,10 @@ class BaseClient:
             Path to the job script or template if render=True
         render : bool
             Use the job_script as a template and render **context into it.
+        dry_run : bool
+            Return the command that would have been executed.
+        env : dict
+            Append the specified dictionary to the execution environment
         **context :
             Additional key/value pairs interpolated into the command and job script.
 
@@ -110,7 +120,7 @@ class BaseClient:
         context["directives"] = self._render_directives(directives)
 
         context["job_script"] = _job_script
-        cmd = self.cmd_templates['submit'].format(**context)
+        cmd = self.cmd_templates["submit"].format(**context)
 
         # Just return the command string for the user without submitting
         if dry_run:
@@ -127,7 +137,7 @@ class BaseClient:
         job_id : str
             Job ID.
         """
-        cmd = self.cmd_templates['status'].format(job_id=job_id)
+        cmd = self.cmd_templates["status"].format(job_id=job_id)
         result = self._shell(cmd)
         return result
 
@@ -139,7 +149,7 @@ class BaseClient:
         job_id : str
             Job ID.
         """
-        cmd = self.cmd_templates['delete'].format(job_id=job_id)
+        cmd = self.cmd_templates["delete"].format(job_id=job_id)
         result = self._shell(cmd)
         return result
 
@@ -173,7 +183,7 @@ class BaseClient:
         """
         return self.status(job_id) == hc.STATUS_RUNNING
 
-    def _shell(self, cmd, decode=True):
+    def _shell(self, cmd, decode=True, env=None):
         """Generic shell interface to capture exceptions.
 
         Parameters
@@ -182,6 +192,8 @@ class BaseClient:
             Command to run.
         decode : bool
             Automatically decode response with utf-8, defaults to True
+        env : dict, optional
+            Add environment variables to the command.
         Raises
         ------
         hpcpy.exceptions.ShellException :
@@ -192,7 +204,7 @@ class BaseClient:
         str
             Result from the underlying called command.
         """
-        result = shell(cmd)
+        result = shell(cmd, env=env)
 
         if decode:
             result = result.stdout.decode("utf8").strip()
@@ -275,7 +287,7 @@ class BaseClient:
         job_id : str
             Job ID.
         """
-        cmd = self.cmd_templates['hold'].format(job_id=job_id)
+        cmd = self.cmd_templates["hold"].format(job_id=job_id)
         result = self._shell(cmd)
         return result
 
@@ -287,7 +299,7 @@ class BaseClient:
         job_id : str
             Job ID.
         """
-        cmd = self.cmd_templates['release'].format(job_id=job_id)
+        cmd = self.cmd_templates["release"].format(job_id=job_id)
         result = self._shell(cmd)
         return result
 
@@ -311,20 +323,20 @@ class BaseClient:
         """
 
         current_time = datetime.now()
-        delay_directive = None
+        delay_str = None
 
         if isinstance(delay, datetime) and delay > current_time:
-            delay_directive = delay.strftime(self.delay_directive_fmt)
+            delay_str = delay.strftime(self.delay_directive_fmt)
 
         elif isinstance(delay, timedelta) and (current_time + delay) > current_time:
-            delay_directive = (current_time + delay).strftime(self.delay_directive_fmt)
+            delay_str = (current_time + delay).strftime(self.delay_directive_fmt)
         else:
             raise ValueError(
                 "Job submission delay argument either incorrect or puts the job in the past."
             )
-        
-        return delay_directive
-    
+
+        return self.directive_templates["delay"].format(delay_str=delay_str)
+
     def _interpolate_directive(self, directives, key, **kwargs):
 
         directives.append(self.directive_templates[key].format(**kwargs))

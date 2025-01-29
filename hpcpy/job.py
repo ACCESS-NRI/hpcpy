@@ -1,5 +1,6 @@
 """Job class."""
 
+
 class Job:
 
     def __init__(self, id, client, auto_update=True) -> None:
@@ -48,20 +49,20 @@ class Job:
 
         # Return the generic status
         return self._status
-    
+
     def hold(self) -> None:
         """Hold the job on the scheduler."""
 
         # Hold the job
         self._client.hold(self.id)
-        
+
         # Update the status
         if self._auto_update:
             self._update()
 
     def release(self) -> None:
         """Release the job on the scheduler."""
-        
+
         # Release the job
         self._client.release(self.id)
 

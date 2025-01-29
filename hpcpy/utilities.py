@@ -7,9 +7,12 @@ from pathlib import Path
 from importlib import resources
 from hpcpy.exceptions import ShellException
 import shlex
+import json
 
 
-def shell(cmd, check=True, capture_output=True, **kwargs) -> sp.CompletedProcess:
+def shell(
+    cmd, check=True, capture_output=True, env=None, **kwargs
+) -> sp.CompletedProcess:
     """Execute a shell command.
 
     Parameters
@@ -20,6 +23,8 @@ def shell(cmd, check=True, capture_output=True, **kwargs) -> sp.CompletedProcess
         Check output, by default True
     capture_output : bool, optional
         Capture output, by default True
+    env : dict, optional
+        Dictionary of environment variables to add to the execution.
 
     Returns
     -------
@@ -37,6 +42,7 @@ def shell(cmd, check=True, capture_output=True, **kwargs) -> sp.CompletedProcess
             shell=True,
             check=check,
             capture_output=capture_output,
+            env=env,
             **kwargs,
         )
     except sp.CalledProcessError as ex:
@@ -117,3 +123,35 @@ def ensure_list(obj) -> list:
         Object of any type
     """
     return obj if isinstance(obj, list) else [obj]
+
+
+def decode_status(status_json):
+    """Decode the status_json (byte) string.
+
+    Parameters
+    ----------
+    status_json : bytes
+        Byte string.
+
+    Returns
+    -------
+    dict
+        Status dictionary.
+    """
+    return json.loads(status_json.decode("utf-8"))
+
+
+def encode_status(status_json):
+    """Encode status_json.
+
+    Parameters
+    ----------
+    status_json : dict
+        Status dictionary.
+
+    Returns
+    -------
+    bytes
+        Bytes array.
+    """
+    return json.dumps(status_json).encode()

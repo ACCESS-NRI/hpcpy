@@ -1,7 +1,6 @@
 from hpcpy.client.base import BaseClient
 from hpcpy.job import Job
 from hpcpy.constants.pbs import COMMANDS, DIRECTIVES, STATUSES
-import hpcpy.constants as hc
 import hpcpy.utilities as hu
 from datetime import datetime, timedelta
 from typing import Union
@@ -15,12 +14,13 @@ class PBSClient(BaseClient):
 
         # Set up the templates
         super().__init__(
-            cmd_templates=COMMANDS, 
+            cmd_templates=COMMANDS,
             directive_templates=DIRECTIVES,
             statuses=STATUSES,
             status_attribute="short",
-            delay_directive_fmt="-a %Y%m%d%H%M.%S",
-            *args, **kwargs
+            delay_directive_fmt="%Y%m%d%H%M.%S",
+            *args,
+            **kwargs,
         )
 
     def status(self, job_id):
@@ -53,7 +53,7 @@ class PBSClient(BaseClient):
         ----------
         variables : dict
             Dictionary of variables
-    
+
         Returns
         -------
         str
@@ -102,7 +102,7 @@ class PBSClient(BaseClient):
             Key/value environment variable pairs added to the qsub command.
         **context:
             Additional key/value pairs to be added to command/jobscript interpolation
-        
+
         Returns
         -------
         Job : hpcpy.job.Job
@@ -113,7 +113,11 @@ class PBSClient(BaseClient):
 
         # Add job depends
         if depends_on:
-            directives = self._interpolate_directive(directives, "depends_on", depends_on_str=":".join(hu.ensure_list(depends_on)))
+            directives = self._interpolate_directive(
+                directives,
+                "depends_on",
+                depends_on_str=":".join(hu.ensure_list(depends_on)),
+            )
 
         # Add delay (specified time or delta)
         if delay:

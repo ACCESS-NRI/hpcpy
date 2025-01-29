@@ -1,5 +1,6 @@
 """Class to manage the status of a job."""
 
+
 class Status:
 
     def __init__(self, short, long, description, generic=None):

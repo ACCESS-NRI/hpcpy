@@ -1,5 +1,4 @@
 from bs4 import BeautifulSoup
-from pprint import pprint
 import requests
 
 url = "https://slurm.schedmd.com/job_state_codes.html"
@@ -34,5 +33,3 @@ if __name__ == "__main__":
         flags[code.text] = description
 
     print(flags)
-
-    
