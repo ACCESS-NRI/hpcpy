@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from typing import Union
 import json
 from pathlib import Path
+import os
 
 
 class SlurmClient(BaseClient):
@@ -74,7 +75,7 @@ class SlurmClient(BaseClient):
         delay: Union[datetime, timedelta] = None,
         queue: str = None,
         walltime: timedelta = None,
-        variables: dict = None,
+        variables: dict = dict(),
         **context,
     ):
         """Submit a job to the scheduler.
@@ -108,10 +109,17 @@ class SlurmClient(BaseClient):
             Job object.
         """
 
+        # Get a logger from the parent
+        self._logger.debug(f"Submitting {job_script}")
+
+        # Initialise directives
         directives = directives if isinstance(directives, list) else []
 
         # Add job depends
         if depends_on:
+
+            self._logger.debug("Job dependency specified.")
+
             directives = self._interpolate_directive(
                 directives,
                 "depends_on",
@@ -120,36 +128,51 @@ class SlurmClient(BaseClient):
 
         # Add delay (specified time or delta)
         if delay:
+            self._logger.debug("Delay specified.")
             delay_directive = self._assemble_delay_directive(delay)
             directives.append(delay_directive)
 
         # Add queue
         if queue:
+            self._logger.debug(f"Queue specified ({queue})")
             directives = self._interpolate_directive(directives, "queue", queue=queue)
             context["queue"] = queue
 
         # Add walltime
         if walltime:
             walltime_str = str(int(walltime.total_seconds() / 60.0))
+            self._logger.debug(f"Walltime specified ({walltime_str})")
             directives = self._interpolate_directive(
                 directives, "walltime", walltime_str=walltime_str
             )
 
-        # Call the super
+        # Update the environment with the variables (which is how Slurm does job variables)
+        self._logger.debug("Updating environment.")
+        _env = os.environ
+        _env.update(variables)
+
+        # Call the super submit
+        self._logger.debug("Submitting via parent class.")
         job_id = super().submit(
             job_script=job_script,
             directives=directives,
             render=render,
             dry_run=dry_run,
-            env=variables,
+            env=_env,
             **context,
         )
 
+        # Return the command from the super
         if dry_run:
+            self._logger.debug("Dry run requested, returning fully-formed command.")
             return job_id
 
+        # Get the job ID out of the return string
+        job_id = job_id.split()[-1]
+        self._logger.debug(f"job_id={job_id}")
+
         # Return the job object
-        return Job(id=job_id, client=self)
+        return Job(id=job_id, client=self, auto_update=True)
 
     def _parse_status(self, raw, job_id):
         """Extract the statue from the raw response.
@@ -186,96 +209,3 @@ class SlurmClient(BaseClient):
                 break
 
         return generic_status, native_full
-
-
-# from hpcpy.client.base import BaseClient
-# import hpcpy.constants as hc
-# from typing import Union
-# from pathlib import Path
-# from datetime import datetime, timedelta
-# import json
-
-
-# class SlurmClient(BaseClient):
-
-#     def __init__(self, *args, **kwargs):
-#         super().__init__(
-#             cmd_templates=hc.SLURM_COMMANDS,
-#             statuses=hc.SLURM_STATUSES,
-#             directive_templates=hc.SLURM_DIRECTIVES,
-#             status_attribute="long",
-#             *args, **kwargs
-#         )
-
-#     def submit(
-#         self,
-#         job_script: Union[str, Path],
-#         directives: list = None,
-#         render: bool = False,
-#         dry_run: bool = False,
-#         depends_on: list = None,
-#         delay: Union[datetime, timedelta] = None,
-#         queue: str = None,
-#         walltime: timedelta = None,
-#         storage: list = None,
-#         variables: dict = None,
-#         **context,
-#     ):
-#         directives = directives if isinstance(directives, list) else []
-
-#         # Add dependencies
-#         if depends_on:
-#             directives.append(f"--dependency=afterok:" + ":".join(depends_on))
-
-
-#     def status(self, job_id):
-#         """Get the statys of a job with id job_id.
-
-#         Parameters
-#         ----------
-#         job_id : str
-#             Job ID.
-
-#         Returns
-#         -------
-#         str
-#             Generic status code.
-#         """
-#         raw = super().status(job_id=job_id)
-#         return self._parse_status(raw, job_id)
-
-#     def _parse_status(self, raw, job_id):
-#         """Extract the statue from the raw response.
-
-#         Parameters
-#         ----------
-#         raw : str
-#             Raw response from the scheduler.
-#         job_id : str
-#             Job ID.
-
-#         Returns
-#         -------
-#         generic_status : str
-#             Generic status code.
-#         native_full : dict
-#             Full native status dictionary.
-#         """
-
-#         # Parse the response
-#         parsed = json.loads(raw)
-
-#         # Get the status from the first job
-#         native_full = parsed.get("jobs")[0]
-#         native_status = native_full.get("job_state")[0]
-
-#         # Set the default generic status to None
-#         generic_status = None
-
-#         # Look up the generic status
-#         for s in self.statuses:
-#             if native_status == s.long:
-#                 generic_status = s.status
-#                 break
-
-#         return generic_status, native_full

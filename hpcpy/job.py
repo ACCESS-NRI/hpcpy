@@ -74,3 +74,10 @@ class Job:
         """Delete the job from the scheduler."""
         # Delete the job
         self._client.delete(self.id)
+
+    def __repr__(self):
+        return ",".join([
+            f"Job(id=\"{self.id}\"",
+            f"status=\"{self._status}\"",
+            f"auto_update=\"{self._auto_update}\"",
+        ]) + ")"

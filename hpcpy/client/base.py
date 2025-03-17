@@ -1,12 +1,12 @@
 """Base client object."""
 
-from hpcpy.utilities import shell, interpolate_file_template
+from hpcpy.utilities import shell, interpolate_file_template, get_logger
 import hpcpy.constants as hc
 from random import choice
 from string import ascii_uppercase
 import os
 from datetime import datetime, timedelta
-import pandas as pd
+from pandas import to_timedelta
 
 
 class BaseClient:
@@ -45,8 +45,17 @@ class BaseClient:
         self.depends_directive_fmt = depends_directive_fmt
         self.directive_templates = directive_templates
 
-    def _clean_rendered_job_scripts(self) -> None:
-        """Clean the rendered job scripts from the JOB_SCRIPT_DIR."""
+        # Set up a shared logger
+        self._logger = get_logger()
+
+    def _clean_rendered_job_scripts(self, force=False) -> None:
+        """Clean the rendered job scripts from the JOB_SCRIPT_DIR.
+
+        Parameters
+        ----------
+        force : bool, optional
+            Clean regardless of expiry, by default False
+        """
 
         # Disable option
         if self.job_script_expiry is None:
@@ -57,7 +66,7 @@ class BaseClient:
 
         # Work out the threshold
         now = datetime.now()
-        threshold = now - pd.to_timedelta(self.job_script_expiry).to_pytimedelta()
+        threshold = now - to_timedelta(self.job_script_expiry).to_pytimedelta()
 
         for rjs in rendered_job_scripts:
 
@@ -67,7 +76,8 @@ class BaseClient:
 
             # Get the modified time of the file, check threshold and delete
             mod_time = datetime.fromtimestamp(os.path.getmtime(rjs))
-            if mod_time <= threshold:
+            print(mod_time, threshold, mod_time <= threshold)
+            if mod_time <= threshold or force == True:
                 os.remove(rjs)
 
     def list_rendered_job_scripts(self) -> list:
@@ -86,7 +96,7 @@ class BaseClient:
         directives=list(),
         render=False,
         dry_run=False,
-        env=None,
+        env=dict(),
         **context,
     ) -> str:
         """Submit the job script.
@@ -110,23 +120,38 @@ class BaseClient:
         str
             Command response text (job id).
         """
-        if render:
-            _job_script = self._render_job_script(job_script, **context)
 
+        if render:
+            self._logger.debug("Rendering job script.")
+            _job_script = self._render_job_script(job_script, **context)
         else:
             _job_script = job_script
+        
+        self._logger.debug(f"Using job script as {_job_script}")
 
         # Add the directives to the interpolation context (will return blank string if nothing there)
-        context["directives"] = self._render_directives(directives)
+        _directives = self._render_directives(directives)
+        context["directives"] = _directives
+        self._logger.debug(f"Directives rendered as {directives}")
 
         context["job_script"] = _job_script
         cmd = self.cmd_templates["submit"].format(**context)
 
+        self._logger.debug(f"Command rendered as:")
+        self._logger.debug(cmd)
+
         # Just return the command string for the user without submitting
         if dry_run:
+            self._logger.debug("dry_run requested, returning submission command.")
             return cmd
 
-        result = self._shell(cmd)
+        # Attach the user environment to the call
+        self._logger.debug("Updating user environment.")
+        _env = os.environ
+        _env.update(env)
+
+        self._logger.debug("Submitting to the shell.")
+        result = self._shell(cmd, env=_env)
         return result
 
     def status(self, job_id):
@@ -338,22 +363,21 @@ class BaseClient:
         return self.directive_templates["delay"].format(delay_str=delay_str)
 
     def _interpolate_directive(self, directives, key, **kwargs):
+        """Interpolate a directive into the keyed template and add to the list.
 
+        Parameters
+        ----------
+        directives : list
+            Directives
+        key : str
+            Key to the template to interpolate into.
+        **kwargs :
+            Key/value pairs to use in interpolation.
+
+        Returns
+        -------
+        list
+            Updated directives list.
+        """
         directives.append(self.directive_templates[key].format(**kwargs))
         return directives
-
-    # def _assemble_depends_directive(self, depends_on_str) -> str:
-    #     """Assemble the depends directive for the scheduler.
-
-    #     Parameters
-    #     ----------
-    #     depends_on_str : str
-    #         List of job IDs to depend on.
-
-    #     Returns
-    #     -------
-    #     str
-    #         Formatted depends directive for the current scheduler.
-    #     """
-    #     # depends_on_str = ":".join(ensure_list(depends_on))
-    #     return self.depends_directive_fmt.format(depends_on_str=depends_on_str)
