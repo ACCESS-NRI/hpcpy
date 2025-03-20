@@ -37,6 +37,7 @@ def shell(
     ------
     hpcpy.exceptions.ShellException :
         When the shell call fails.
+
     """
     try:
         return sp.run(
@@ -68,8 +69,8 @@ def interpolate_string_template(template, **kwargs) -> str:
     ------
     jinja2.exceptions.UndefinedError :
         When a variable is undeclared nor has a default applied.
-    """
 
+    """
     # Set up the rendering environment
     env = j2.Environment(loader=j2.BaseLoader(), undefined=j2.DebugUndefined)
 
@@ -99,6 +100,7 @@ def interpolate_file_template(filepath, **kwargs) -> str:
     -------
     str
         Interpolated template.
+
     """
     template = open(filepath, "r").read()
     return interpolate_string_template(template, **kwargs)
@@ -123,6 +125,12 @@ def ensure_list(obj) -> list:
     ----------
     obj : mixed
         Object of any type
+
+    Returns
+    -------
+    list
+        The object if it is already a list, or a list containing it.
+
     """
     return obj if isinstance(obj, list) else [obj]
 
@@ -157,6 +165,7 @@ def encode_status(status_json):
         Bytes array.
     """
     return json.dumps(status_json).encode()
+
 
 def get_logger(name="hpcpy", level="debug"):
     """Get a logger instance.

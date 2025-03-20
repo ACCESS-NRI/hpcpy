@@ -1,4 +1,4 @@
-"""SLURM client"""
+"""SLURM Client."""
 
 from hpcpy.client.base import BaseClient
 from hpcpy.job import Job
@@ -12,9 +12,17 @@ import os
 
 
 class SlurmClient(BaseClient):
+    """SLURM interface.
+
+    Parameters
+    ----------
+    *args
+        Positional arguments forwarded to the base class.
+    **kwargs
+        Keyword arguments forwarded to the base class.
+    """
 
     def __init__(self, *args, **kwargs):
-
         # Set up the templates
         super().__init__(
             cmd_templates=COMMANDS,
@@ -39,7 +47,6 @@ class SlurmClient(BaseClient):
         str
             Generic status code.
         """
-
         # Get the raw response
         raw = super().status(job_id=job_id)
 
@@ -108,7 +115,6 @@ class SlurmClient(BaseClient):
         Job : hpcpy.job.Job
             Job object.
         """
-
         # Get a logger from the parent
         self._logger.debug(f"Submitting {job_script}")
 
@@ -191,7 +197,6 @@ class SlurmClient(BaseClient):
         native_full : dict
             Full native status dictionary.
         """
-
         # Parse the response
         parsed = json.loads(raw)
 

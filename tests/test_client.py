@@ -4,7 +4,6 @@ import pytest
 from hpcpy import PBSClient
 import hpcpy.utilities as hu
 import os
-import time
 
 
 @pytest.fixture(autouse=True)

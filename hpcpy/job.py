@@ -2,19 +2,19 @@
 
 
 class Job:
+    """Job class to represent a job on the scheduler.
+
+    Parameters
+    ----------
+    id : str
+        Job ID.
+    client : object
+        Client object.
+    auto_update : bool, optional
+        Automatically update this object after each action, by default True
+    """
 
     def __init__(self, id, client, auto_update=True) -> None:
-        """Constructor.
-
-        Parameters
-        ----------
-        id : str
-            Job ID.
-        client : object
-            Client object.
-        auto_update : bool, optional
-            Automatically update this object after each action, by default True
-        """
         self.id = id
         self._client = client
         self._auto_update = auto_update
@@ -52,7 +52,6 @@ class Job:
 
     def hold(self) -> None:
         """Hold the job on the scheduler."""
-
         # Hold the job
         self._client.hold(self.id)
 
@@ -62,7 +61,6 @@ class Job:
 
     def release(self) -> None:
         """Release the job on the scheduler."""
-
         # Release the job
         self._client.release(self.id)
 
@@ -76,8 +74,13 @@ class Job:
         self._client.delete(self.id)
 
     def __repr__(self):
-        return ",".join([
-            f"Job(id=\"{self.id}\"",
-            f"status=\"{self._status}\"",
-            f"auto_update=\"{self._auto_update}\"",
-        ]) + ")"
+        return (
+            ",".join(
+                [
+                    f'Job(id="{self.id}"',
+                    f'status="{self._status}"',
+                    f'auto_update="{self._auto_update}"',
+                ]
+            )
+            + ")"
+        )

@@ -10,7 +10,25 @@ from pandas import to_timedelta
 
 
 class BaseClient:
-    """A base class from which all others inherit."""
+    """A base class from which all others inherit.
+
+    Parameters
+    ----------
+    cmd_templates : dict
+        Dictionary of command templates.
+    directive_templates : dict
+        Dictionary of directive templates.
+    statuses : list
+        List of statuses.
+    status_attribute : str
+        Attribute to use for status lookup.
+    job_script_expiry : str, optional
+        Job script expiry interval, by default "1H"
+    delay_directive_fmt : str, optional
+        Delay directive format.
+    depands_directive_fmt : str, optional
+        Depends directive format.
+    """
 
     def __init__(
         self,
@@ -22,21 +40,7 @@ class BaseClient:
         delay_directive_fmt="-a %Y%m%d%H%M.%S",
         depends_directive_fmt="-W depend=afterok:{depends_on_str}",
     ):
-        """Constructor.
-
-        Parameters
-        ----------
-        cmd_templates : dict
-            Dictionary of command templates.
-        statuses : list
-            List of statuses.
-        status_attribute : str
-            Attribute to use for status lookup.
-        job_script_expiry : str, optional
-            Job script expiry interval, by default "1H"
-        """
-
-        # Set the command templates
+        # Set the command templates etc.
         self.cmd_templates = cmd_templates
         self.job_script_expiry = job_script_expiry
         self.statuses = statuses
@@ -56,10 +60,11 @@ class BaseClient:
         force : bool, optional
             Clean regardless of expiry, by default False
         """
-
         # Disable option
-        if self.job_script_expiry is None:
+        if self.job_script_expiry is None and force is False:
             return
+
+        self._logger.debug(f"Cleaning rendered jobscripts (force={force}).")
 
         # List the rendered files.
         rendered_job_scripts = self.list_rendered_job_scripts()
@@ -76,12 +81,14 @@ class BaseClient:
 
             # Get the modified time of the file, check threshold and delete
             mod_time = datetime.fromtimestamp(os.path.getmtime(rjs))
-            print(mod_time, threshold, mod_time <= threshold)
+
+            # Check if the file has expired
             if mod_time <= threshold or force == True:
+                self._logger.debug(f"Removing {rjs}")
                 os.remove(rjs)
 
     def list_rendered_job_scripts(self) -> list:
-        """List the rendered job scripts in the JOB_SCRIPT_DIR
+        """List the rendered job scripts in the JOB_SCRIPT_DIR.
 
         Returns
         -------
@@ -101,13 +108,14 @@ class BaseClient:
     ) -> str:
         """Submit the job script.
 
-
         Parameters
         ----------
         job_script : path-like
             Path to the job script or template if render=True
         render : bool
             Use the job_script as a template and render **context into it.
+        directives : list
+            List of directives to add to the command.
         dry_run : bool
             Return the command that would have been executed.
         env : dict
@@ -120,13 +128,12 @@ class BaseClient:
         str
             Command response text (job id).
         """
-
         if render:
             self._logger.debug("Rendering job script.")
             _job_script = self._render_job_script(job_script, **context)
         else:
             _job_script = job_script
-        
+
         self._logger.debug(f"Using job script as {_job_script}")
 
         # Add the directives to the interpolation context (will return blank string if nothing there)
@@ -134,10 +141,12 @@ class BaseClient:
         context["directives"] = _directives
         self._logger.debug(f"Directives rendered as {directives}")
 
+        # Add the job script to the context
         context["job_script"] = _job_script
-        cmd = self.cmd_templates["submit"].format(**context)
 
-        self._logger.debug(f"Command rendered as:")
+        # Assemble the submit command
+        cmd = self.cmd_templates["submit"].format(**context)
+        self._logger.debug("Command rendered as:")
         self._logger.debug(cmd)
 
         # Just return the command string for the user without submitting
@@ -150,6 +159,7 @@ class BaseClient:
         _env = os.environ
         _env.update(env)
 
+        # Submit
         self._logger.debug("Submitting to the shell.")
         result = self._shell(cmd, env=_env)
         return result
@@ -161,6 +171,11 @@ class BaseClient:
         ----------
         job_id : str
             Job ID.
+
+        Returns
+        -------
+        str
+            Command response text.
         """
         cmd = self.cmd_templates["status"].format(job_id=job_id)
         result = self._shell(cmd)
@@ -173,6 +188,11 @@ class BaseClient:
         ----------
         job_id : str
             Job ID.
+
+        Returns
+        -------
+        str
+            Command response text.
         """
         cmd = self.cmd_templates["delete"].format(job_id=job_id)
         result = self._shell(cmd)
@@ -209,7 +229,7 @@ class BaseClient:
         return self.status(job_id) == hc.STATUS_RUNNING
 
     def _shell(self, cmd, decode=True, env=None):
-        """Generic shell interface to capture exceptions.
+        """Run the shell utility for the given command.
 
         Parameters
         ----------
@@ -219,6 +239,7 @@ class BaseClient:
             Automatically decode response with utf-8, defaults to True
         env : dict, optional
             Add environment variables to the command.
+
         Raises
         ------
         hpcpy.exceptions.ShellException :
@@ -237,7 +258,7 @@ class BaseClient:
         return result
 
     def _get_job_script_filename(self, filepath, hash_length=8) -> str:
-        """Generate a script filename with a random prefix.
+        """Generate a script filename with a random suffix.
 
         Parameters
         ----------
@@ -249,7 +270,7 @@ class BaseClient:
         Returns
         -------
         str
-            Hash-prefixed filename.
+            Hash-suffixed filename.
         """
         filename, ext = os.path.splitext(filepath)
         filename = os.path.basename(filename)
@@ -263,13 +284,14 @@ class BaseClient:
         ----------
         template : str, path-like.
             Path to the template.
+        **context :
+            Key/value pairs to be interpolated into the script.
 
         Returns
         -------
         str
             Path to the rendered job script.
         """
-
         # Render the template
         _rendered = interpolate_file_template(template, **context)
 
@@ -297,7 +319,6 @@ class BaseClient:
         str
             Rendered directives, or blank string.
         """
-
         # Render blank directives if empty
         if not directives:
             return ""
@@ -311,6 +332,11 @@ class BaseClient:
         ----------
         job_id : str
             Job ID.
+
+        Returns
+        -------
+        str
+            Command response text.
         """
         cmd = self.cmd_templates["hold"].format(job_id=job_id)
         result = self._shell(cmd)
@@ -323,6 +349,11 @@ class BaseClient:
         ----------
         job_id : str
             Job ID.
+
+        Returns
+        -------
+        str
+            Command response text.
         """
         cmd = self.cmd_templates["release"].format(job_id=job_id)
         result = self._shell(cmd)
@@ -346,7 +377,6 @@ class BaseClient:
         ValueError
             When the delay argument is incorrect or puts the job in the past.
         """
-
         current_time = datetime.now()
         delay_str = None
 

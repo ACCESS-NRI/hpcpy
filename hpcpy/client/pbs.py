@@ -1,3 +1,5 @@
+"""PBS implementation."""
+
 from hpcpy.client.base import BaseClient
 from hpcpy.job import Job
 from hpcpy.constants.pbs import COMMANDS, DIRECTIVES, STATUSES
@@ -9,9 +11,17 @@ from pathlib import Path
 
 
 class PBSClient(BaseClient):
+    """PBS interface.
+
+    Parameters
+    ----------
+    *args
+        Positional arguments forwarded to the base class.
+    **kwargs
+        Keyword arguments forwarded to the base class.
+    """
 
     def __init__(self, *args, **kwargs):
-
         # Set up the templates
         super().__init__(
             cmd_templates=COMMANDS,
@@ -36,7 +46,6 @@ class PBSClient(BaseClient):
         str
             Generic status code.
         """
-
         # Get the raw response
         raw = super().status(job_id=job_id)
 
@@ -108,7 +117,7 @@ class PBSClient(BaseClient):
         Job : hpcpy.job.Job
             Job object.
         """
-
+        # Initialise the directives to an empty list
         directives = directives if isinstance(directives, list) else []
 
         # Add job depends
@@ -168,6 +177,8 @@ class PBSClient(BaseClient):
         ----------
         raw : str
             Raw response from the scheduler.
+        job_id : str
+            Job ID required to extract status from the response.
 
         Returns
         -------
