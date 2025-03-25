@@ -1,6 +1,7 @@
 """Base client object."""
 
 from hpcpy.utilities import shell, interpolate_file_template, get_logger
+from hpcpy.job import Job
 import hpcpy.constants as hc
 from random import choice
 from string import ascii_uppercase
@@ -37,16 +38,12 @@ class BaseClient:
         statuses,
         status_attribute,
         job_script_expiry="1H",
-        delay_directive_fmt="-a %Y%m%d%H%M.%S",
-        depends_directive_fmt="-W depend=afterok:{depends_on_str}",
     ):
         # Set the command templates etc.
         self.cmd_templates = cmd_templates
         self.job_script_expiry = job_script_expiry
         self.statuses = statuses
         self.status_attribute = status_attribute
-        self.delay_directive_fmt = delay_directive_fmt
-        self.depends_directive_fmt = depends_directive_fmt
         self.directive_templates = directive_templates
 
         # Set up a shared logger
@@ -162,7 +159,12 @@ class BaseClient:
         # Submit
         self._logger.debug("Submitting to the shell.")
         result = self._shell(cmd, env=_env)
-        return result
+
+        # Job ID is the last part of the returned string for either client
+        job_id = result.split()[-1]
+
+        # Return the job object, but switch off auto_update so it doesn't attempt to get status
+        return Job(job_id, client=None, auto_update=False)
 
     def status(self, job_id):
         """Check the status of a job.
@@ -359,13 +361,15 @@ class BaseClient:
         result = self._shell(cmd)
         return result
 
-    def _assemble_delay_directive(self, delay) -> str:
+    def _assemble_delay_directive(self, delay, delay_directive_fmt) -> str:
         """Assemble the delay directive for the scheduler.
 
         Parameters
         ----------
         delay : datetime or timedelta
             Either a specific datetime or delta from now.
+        delay_directive_fmt : str
+            Delay directive format.
 
         Returns
         -------
@@ -381,10 +385,10 @@ class BaseClient:
         delay_str = None
 
         if isinstance(delay, datetime) and delay > current_time:
-            delay_str = delay.strftime(self.delay_directive_fmt)
+            delay_str = delay.strftime(delay_directive_fmt)
 
         elif isinstance(delay, timedelta) and (current_time + delay) > current_time:
-            delay_str = (current_time + delay).strftime(self.delay_directive_fmt)
+            delay_str = (current_time + delay).strftime(delay_directive_fmt)
         else:
             raise ValueError(
                 "Job submission delay argument either incorrect or puts the job in the past."

@@ -8,6 +8,8 @@ from hpcpy.constants import (
 )
 from hpcpy.status import Status
 
+DELAY_DIRECTIVE_FMT = "%Y-%m-%dT%H:%M:%S"
+
 # SLURM command templates
 COMMANDS = dict(
     submit="sbatch{directives} {job_script}",

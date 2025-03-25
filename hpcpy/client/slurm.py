@@ -1,8 +1,7 @@
 """SLURM Client."""
 
 from hpcpy.client.base import BaseClient
-from hpcpy.job import Job
-from hpcpy.constants.slurm import COMMANDS, STATUSES, DIRECTIVES
+from hpcpy.constants.slurm import COMMANDS, STATUSES, DIRECTIVES, DELAY_DIRECTIVE_FMT
 import hpcpy.utilities as hu
 from datetime import datetime, timedelta
 from typing import Union
@@ -29,7 +28,6 @@ class SlurmClient(BaseClient):
             directive_templates=DIRECTIVES,
             statuses=STATUSES,
             status_attribute="short",
-            delay_directive_fmt="%Y-%m-%dT%H:%M:%S",
             *args,
             **kwargs,
         )
@@ -135,7 +133,7 @@ class SlurmClient(BaseClient):
         # Add delay (specified time or delta)
         if delay:
             self._logger.debug("Delay specified.")
-            delay_directive = self._assemble_delay_directive(delay)
+            delay_directive = self._assemble_delay_directive(delay, DELAY_DIRECTIVE_FMT)
             directives.append(delay_directive)
 
         # Add queue
@@ -154,12 +152,12 @@ class SlurmClient(BaseClient):
 
         # Update the environment with the variables (which is how Slurm does job variables)
         self._logger.debug("Updating environment.")
-        _env = os.environ
+        _env = os.environ.copy()
         _env.update(variables)
 
         # Call the super submit
         self._logger.debug("Submitting via parent class.")
-        job_id = super().submit(
+        job_or_cmd = super().submit(
             job_script=job_script,
             directives=directives,
             render=render,
@@ -171,14 +169,17 @@ class SlurmClient(BaseClient):
         # Return the command from the super
         if dry_run:
             self._logger.debug("Dry run requested, returning fully-formed command.")
-            return job_id
+            return job_or_cmd
+
+        # Point to this client in the job object and switch on auto_update
+        job_or_cmd.set_client(self)
+        job_or_cmd._auto_update = True
 
         # Get the job ID out of the return string
-        job_id = job_id.split()[-1]
-        self._logger.debug(f"job_id={job_id}")
+        self._logger.debug(f"job_id={job_or_cmd.id}")
 
         # Return the job object
-        return Job(id=job_id, client=self, auto_update=True)
+        return job_or_cmd
 
     def _parse_status(self, raw, job_id):
         """Extract the statue from the raw response.

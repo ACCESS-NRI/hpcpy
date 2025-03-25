@@ -3,6 +3,8 @@
 from hpcpy.status import Status
 import hpcpy.constants as hc
 
+DELAY_DIRECTIVE_FMT = "%Y%m%d%H%M.%S"
+
 
 # Commands
 COMMANDS = dict(

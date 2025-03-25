@@ -25,6 +25,16 @@ class Job:
         if self._auto_update:
             self._update()
 
+    def set_client(self, client):
+        """Set the client for the job.
+
+        Parameters
+        ----------
+        client : hpcpy.client.base.BaseClient
+            Instance of client.
+        """
+        self._client = client
+
     def _update(self) -> None:
         """Update the job status."""
         # Get the generic status and the full native status object from the client

@@ -1,8 +1,7 @@
 """PBS implementation."""
 
 from hpcpy.client.base import BaseClient
-from hpcpy.job import Job
-from hpcpy.constants.pbs import COMMANDS, DIRECTIVES, STATUSES
+from hpcpy.constants.pbs import COMMANDS, DIRECTIVES, STATUSES, DELAY_DIRECTIVE_FMT
 import hpcpy.utilities as hu
 from datetime import datetime, timedelta
 from typing import Union
@@ -28,7 +27,6 @@ class PBSClient(BaseClient):
             directive_templates=DIRECTIVES,
             statuses=STATUSES,
             status_attribute="short",
-            delay_directive_fmt="%Y%m%d%H%M.%S",
             *args,
             **kwargs,
         )
@@ -130,7 +128,7 @@ class PBSClient(BaseClient):
 
         # Add delay (specified time or delta)
         if delay:
-            delay_directive = self._assemble_delay_directive(delay)
+            delay_directive = self._assemble_delay_directive(delay, DELAY_DIRECTIVE_FMT)
             directives.append(delay_directive)
 
         # Add queue
@@ -156,7 +154,7 @@ class PBSClient(BaseClient):
             directives.append(self._render_variables(variables))
 
         # Call the super
-        job_id = super().submit(
+        job_or_cmd = super().submit(
             job_script=job_script,
             directives=directives,
             render=render,
@@ -164,11 +162,16 @@ class PBSClient(BaseClient):
             **context,
         )
 
+        # Return the command if requested
         if dry_run:
-            return job_id
+            return job_or_cmd
+
+        # Point to this client from the job and switch on auto_update
+        job_or_cmd.set_client(self)
+        job_or_cmd._auto_update = True
 
         # Return the job object
-        return Job(id=job_id, client=self)
+        return job_or_cmd
 
     def _parse_status(self, raw, job_id):
         """Extract the status from the raw response.
