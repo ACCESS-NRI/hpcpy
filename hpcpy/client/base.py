@@ -8,6 +8,7 @@ from string import ascii_uppercase
 import os
 from datetime import datetime, timedelta
 from pandas import to_timedelta
+from typing import Union
 
 
 class BaseClient:
@@ -25,10 +26,6 @@ class BaseClient:
         Attribute to use for status lookup.
     job_script_expiry : str, optional
         Job script expiry interval, by default "1H"
-    delay_directive_fmt : str, optional
-        Delay directive format.
-    depands_directive_fmt : str, optional
-        Depends directive format.
     """
 
     def __init__(
@@ -102,7 +99,7 @@ class BaseClient:
         dry_run=False,
         env=dict(),
         **context,
-    ) -> str:
+    ) -> Union[Job, str]:
         """Submit the job script.
 
         Parameters
@@ -122,8 +119,9 @@ class BaseClient:
 
         Returns
         -------
-        str
-            Command response text (job id).
+        Union[Job, str]
+            Submitted job object, or the command to execute (if dry_run=True).
+
         """
         if render:
             self._logger.debug("Rendering job script.")
