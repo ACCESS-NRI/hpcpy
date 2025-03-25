@@ -45,7 +45,7 @@ def test_clean_rendered_job_scripts(client):
     client.job_script_expiry = "0h"
 
     # Ensure that the job script directory is empty
-    client._clean_rendered_job_scripts()
+    client._clean_rendered_job_scripts(force=True)
     rjs = client.list_rendered_job_scripts()
 
     assert len(rjs) == 0

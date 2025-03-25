@@ -8,6 +8,7 @@ from typing import Union
 
 
 class ClientFactory:
+    """An object that agnostically selects a scheduler."""
 
     def get_client(*args, **kwargs) -> Union[PBSClient, SlurmClient]:
         """Get a client object based on what kind of scheduler we are using.
@@ -27,7 +28,6 @@ class ClientFactory:
         hx.NoClientException
             When no scheduler can be detected.
         """
-
         clients = dict(qsub=PBSClient, sbatch=SlurmClient)
 
         # Loop through the clients in order, looking for a valid scheduler

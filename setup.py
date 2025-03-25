@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Setup."""
 from setuptools import setup
 import versioneer
 

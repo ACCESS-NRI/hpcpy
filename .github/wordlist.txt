@@ -7,3 +7,11 @@ Jinja
 README
 md
 conda
+agnostically
+pytest
+SLURM
+hpcpy
+readthedocs
+io
+generalise
+generalised

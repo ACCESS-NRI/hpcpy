@@ -25,28 +25,28 @@ client_slurm = SLURMClient()
 
 ## Submit
 
-The simplest way to submit a pre-written job script is via the `submit()` command, which executes the appropriate command for the scheduler:
+The simplest way to submit a pre-written job script is via the `submit()` command, which executes the appropriate command for the scheduler. Submitting a job will return a `Job` object from which you can interact with the scheduler.
 
-=== "HPCPy (Python)"
+=== "HPCpy (Python)"
     ```python
-    job_id = client.submit("/path/to/script.sh")
+    job = client.submit("/path/to/script.sh")
     ```
 
 === "PBS"
     ```shell
-    JOB_ID=$(qsub /path/to/script.sh)
+    qsub /path/to/script.sh
     ```
 
 === "SLURM"
     ```shell
-    JOB_ID=$(sbatch /path/to/script.sh)
+    sbatch /path/to/script.sh
     ```
 
 ### Environment Variables
 
 === "HPCpy (Python)"
     ```python
-    job_id = client.submit(
+    job = client.submit(
         "/path/to/script.sh",
         variables=dict(a=1, b="test")
     )
@@ -55,6 +55,12 @@ The simplest way to submit a pre-written job script is via the `submit()` comman
 === "PBS"
     ```shell
     qsub -v a=1,b=test /path/to/script.sh
+    ```
+
+=== "SLURM"
+    ```shell
+    # Variables exported to the environment
+    sbatch /path/to/script.sh
     ```
 
 !!! note
@@ -73,7 +79,7 @@ echo "{{message}}"
 *submit.py*
 ```python
 
-job_id = client.submit(
+job = client.submit(
     "/path/to/template.sh",
     render=True, # Note, this is False by default
     
@@ -102,25 +108,35 @@ job_script_filepath = client._render_job_script(
 
 ## Status
 
-Checking the status of a job that has been submitted requires the `job_id` of the job on on the scheduler. Using the `submit()` command as above will return this identifier for use with the client.
+To access the status of a job on the scheduler, simply call the `status()` method on the `Job` object:
+
+=== "HPCpy (Python)"
+    ```python
+    status = job.status()
+    ```
+=== "PBS"
+    ```shell
+    qstat -f -F json $JOB_ID
+    ```
+=== "SLURM"
+    ```shell
+    squeue -j $JOB_ID
+    ```
+
+You may also access the status directly through the client, if you have the `job_id` readily at hand via the following command:
 
 === "HPCpy (Python)"
     ```python
     status = client.status(job_id)
     ```
-=== "PBS"
-    ```shell
-    STATUS=$(qstat -f -F json $JOB_ID)
-    # ... then grepping through to find the job_state attribute
-    ```
 
-The status will be a character code as listed in `constants.py`, however, certain shortcut methods are available for the most common queries.
+The status will be a character code as listed in `constants/__init__.py`, however, certain shortcut methods are available for the most common queries.
 
 ```python
-# Check if the job is queued
+# Check if the job is queued, using the client
 client.is_queued(job_id)
 
-# Check if the job is running
+# Check if the job is running, using the client
 client.is_running(job_id)
 ```
 
@@ -131,25 +147,35 @@ More shorthand methods will be made available as required.
 
 ## Delete
 
-Deleting a job on the system requires only the `job_id` of the job on the scheduler
+Deleting a job is accomplished by calling the delete method on either the client or the job object:
 
 === "HPCpy (Python)"
     ```python
+    # For when you have the ID
     client.delete(job_id)
+
+    # For when you are using the job object
+    job.delete()
     ```
+
 === "PBS"
     ```shell
     qdel $JOB_ID
+    ```
+
+=== "SLURM"
+    ```shell
+    scancel $JOB_ID
     ```
 
 ## Task dependence
 
 HPCpy implements a simple task-dependence strategy at the scheduler level, whereby, we can use scheduler directives to make one job dependent on another.
 
-=== "HPCPy (Python)"
+=== "HPCpy (Python)"
     ```python
     job1 = client.submit("job1.sh")
-    job2 = client.submit("job2.sh", depends_on=job1)
+    job2 = client.submit("job2.sh", depends_on=job1.id)
     ```
 === "PBS"
     ```shell
@@ -157,19 +183,22 @@ HPCpy implements a simple task-dependence strategy at the scheduler level, where
     JOB2=$(qsub -W depend=afterok:$JOB1 job2.sh)
     ```
 
+!!! note
+    The current implementation of the `depends_on` keyword is to take a job id, or a list of job ids.
+
 Consider the following snippet:
 
 ```python
 from hpcpy import get_client
 client = get_client()
 
-# Submit the first job
-first_id = client.submit("job.sh")
+# Submit the first job, get the ID
+first_id = client.submit("job.sh").id
 
 # Submit some interim jobs all requiring the first to finish
 job_ids = list()
 for x in range(3):
-    jobx_id = client.submit("job.sh", depends_on=first_id)
+    jobx_id = client.submit("job.sh", depends_on=first_id).id
     job_ids.append(jobx_id)
 
 # Submit a final job that requires everything to have finished.

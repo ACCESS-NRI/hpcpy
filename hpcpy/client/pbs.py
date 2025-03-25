@@ -1,5 +1,7 @@
+"""PBS implementation."""
+
 from hpcpy.client.base import BaseClient
-import hpcpy.constants as hc
+from hpcpy.constants.pbs import COMMANDS, DIRECTIVES, STATUSES, DELAY_DIRECTIVE_FMT
 import hpcpy.utilities as hu
 from datetime import datetime, timedelta
 from typing import Union
@@ -8,25 +10,48 @@ from pathlib import Path
 
 
 class PBSClient(BaseClient):
+    """PBS interface.
+
+    Parameters
+    ----------
+    *args
+        Positional arguments forwarded to the base class.
+    **kwargs
+        Keyword arguments forwarded to the base class.
+    """
 
     def __init__(self, *args, **kwargs):
-
         # Set up the templates
         super().__init__(
-            tmp_submit=hc.PBS_SUBMIT, tmp_status=hc.PBS_STATUS, tmp_delete=hc.PBS_DELETE
+            cmd_templates=COMMANDS,
+            directive_templates=DIRECTIVES,
+            statuses=STATUSES,
+            status_attribute="short",
+            *args,
+            **kwargs,
         )
 
     def status(self, job_id):
+        """Get the status of a job.
 
+        Parameters
+        ----------
+        job_id : str
+            Job ID.
+
+        Returns
+        -------
+        str
+            Generic status code.
+        """
         # Get the raw response
         raw = super().status(job_id=job_id)
 
-        # Convert to JSON
-        parsed = json.loads(raw)
+        # Parse the status as per this implementation
+        generic_status, native_full = self._parse_status(raw, job_id)
 
-        # Get the status out of the job ID
-        _status = parsed.get("Jobs").get(job_id).get("job_state")
-        return hc.PBS_STATUSES[_status]
+        # Return the generic status
+        return generic_status, native_full
 
     def _render_variables(self, variables):
         """Render the variables flag for PBS.
@@ -84,37 +109,31 @@ class PBSClient(BaseClient):
             Key/value environment variable pairs added to the qsub command.
         **context:
             Additional key/value pairs to be added to command/jobscript interpolation
-        """
 
-        directives = directives if isinstance(directives, list) else list()
+        Returns
+        -------
+        Job : hpcpy.job.Job
+            Job object.
+        """
+        # Initialise the directives to an empty list
+        directives = directives if isinstance(directives, list) else []
 
         # Add job depends
         if depends_on:
-            depends_on = hu.ensure_list(depends_on)
-            directives.append("-W depend=afterok:" + ":".join(depends_on))
+            directives = self._interpolate_directive(
+                directives,
+                "depends_on",
+                depends_on_str=":".join(hu.ensure_list(depends_on)),
+            )
 
         # Add delay (specified time or delta)
         if delay:
-
-            current_time = datetime.now()
-            delay_str = None
-
-            if isinstance(delay, datetime) and delay > current_time:
-                delay_str = delay.strftime("%Y%m%d%H%M.%S")
-
-            elif isinstance(delay, timedelta) and (current_time + delay) > current_time:
-                delay_str = (current_time + delay).strftime("%Y%m%d%H%M.%S")
-            else:
-                raise ValueError(
-                    "Job submission delay argument either incorrect or puts the job in the past."
-                )
-
-            # Add the delay directive
-            directives.append(f"-a {delay_str}")
+            delay_directive = self._assemble_delay_directive(delay, DELAY_DIRECTIVE_FMT)
+            directives.append(delay_directive)
 
         # Add queue
         if queue:
-            directives.append(f"-q {queue}")
+            directives = self._interpolate_directive(directives, "queue", queue=queue)
             context["queue"] = queue
 
         # Add walltime
@@ -135,10 +154,54 @@ class PBSClient(BaseClient):
             directives.append(self._render_variables(variables))
 
         # Call the super
-        return super().submit(
+        job_or_cmd = super().submit(
             job_script=job_script,
             directives=directives,
             render=render,
             dry_run=dry_run,
             **context,
         )
+
+        # Return the command if requested
+        if dry_run:
+            return job_or_cmd
+
+        # Point to this client from the job and switch on auto_update
+        job_or_cmd.set_client(self)
+        job_or_cmd._auto_update = True
+
+        # Return the job object
+        return job_or_cmd
+
+    def _parse_status(self, raw, job_id):
+        """Extract the status from the raw response.
+
+        Parameters
+        ----------
+        raw : str
+            Raw response from the scheduler.
+        job_id : str
+            Job ID required to extract status from the response.
+
+        Returns
+        -------
+        str
+            Status code.
+        """
+        # Convert to JSON
+        parsed = json.loads(raw)
+
+        # Get the status out of the job ID
+        native_full = parsed.get("Jobs").get(job_id)
+        native_status = native_full.get("job_state")
+
+        # Set the generic status attribute
+        generic_status = None
+
+        for s in self.statuses:
+            if native_status == s.short:
+                generic_status = s.status
+                break
+
+        # Return the generic status
+        return generic_status, native_full

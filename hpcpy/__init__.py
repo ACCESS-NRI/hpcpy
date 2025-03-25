@@ -16,5 +16,6 @@ def get_client(*args, **kwargs) -> Union[PBSClient, SlurmClient]:
     -------
     Union[PBSClient, SLURMClient, MockClient]
         Client object for this scheduler.
+
     """
     return ClientFactory().get_client(*args, **kwargs)

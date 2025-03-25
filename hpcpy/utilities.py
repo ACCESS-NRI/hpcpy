@@ -6,10 +6,15 @@ import jinja2.meta as j2m
 from pathlib import Path
 from importlib import resources
 from hpcpy.exceptions import ShellException
+import logging
+import sys
 import shlex
+import json
 
 
-def shell(cmd, check=True, capture_output=True, **kwargs) -> sp.CompletedProcess:
+def shell(
+    cmd, check=True, capture_output=True, env=None, **kwargs
+) -> sp.CompletedProcess:
     """Execute a shell command.
 
     Parameters
@@ -20,6 +25,8 @@ def shell(cmd, check=True, capture_output=True, **kwargs) -> sp.CompletedProcess
         Check output, by default True
     capture_output : bool, optional
         Capture output, by default True
+    env : dict, optional
+        Dictionary of environment variables to add to the execution.
 
     Returns
     -------
@@ -30,13 +37,15 @@ def shell(cmd, check=True, capture_output=True, **kwargs) -> sp.CompletedProcess
     ------
     hpcpy.exceptions.ShellException :
         When the shell call fails.
+
     """
     try:
         return sp.run(
             shlex.split(cmd),
-            shell=True,
+            shell=False,
             check=check,
             capture_output=capture_output,
+            env=env,
             **kwargs,
         )
     except sp.CalledProcessError as ex:
@@ -60,8 +69,8 @@ def interpolate_string_template(template, **kwargs) -> str:
     ------
     jinja2.exceptions.UndefinedError :
         When a variable is undeclared nor has a default applied.
-    """
 
+    """
     # Set up the rendering environment
     env = j2.Environment(loader=j2.BaseLoader(), undefined=j2.DebugUndefined)
 
@@ -91,13 +100,14 @@ def interpolate_file_template(filepath, **kwargs) -> str:
     -------
     str
         Interpolated template.
+
     """
     template = open(filepath, "r").read()
     return interpolate_string_template(template, **kwargs)
 
 
 def get_installed_root() -> Path:
-    """Get the installed root of the benchcab installation.
+    """Get the installed root of the hpcpy installation.
 
     Returns
     -------
@@ -115,5 +125,85 @@ def ensure_list(obj) -> list:
     ----------
     obj : mixed
         Object of any type
+
+    Returns
+    -------
+    list
+        The object if it is already a list, or a list containing it.
+
     """
     return obj if isinstance(obj, list) else [obj]
+
+
+def decode_status(status_json):
+    """Decode the status_json (byte) string.
+
+    Parameters
+    ----------
+    status_json : bytes
+        Byte string.
+
+    Returns
+    -------
+    dict
+        Status dictionary.
+    """
+    return json.loads(status_json.decode("utf-8"))
+
+
+def encode_status(status_json):
+    """Encode status_json.
+
+    Parameters
+    ----------
+    status_json : dict
+        Status dictionary.
+
+    Returns
+    -------
+    bytes
+        Bytes array.
+    """
+    return json.dumps(status_json).encode()
+
+
+def get_logger(name="hpcpy", level="debug"):
+    """Get a logger instance.
+
+    Parameters
+    ----------
+    name : str, optional
+        Name, by default 'benchcab'
+    level : str, optional
+        Level, by default 'debug'
+
+    Returns
+    -------
+    logging.Logger
+        A logger instance guaranteed to be singleton if called with the same params.
+
+    """
+    # Get or create a logger
+    logger = logging.getLogger(name)
+
+    # Workaround for native singleton property.
+    # NOTE: This will ignore the provided level and give you whatever was first set.
+    if logger.level != logging.NOTSET:
+        return logger
+
+    # Set the level
+    level = getattr(logging, level.upper())
+    logger.setLevel(level)
+
+    # Create the formatter
+    log_format = (
+        "%(asctime)s - %(levelname)s - %(module)s.%(filename)s:%(lineno)s - %(message)s"
+    )
+    formatter = logging.Formatter(log_format)
+
+    # Create/set the handler to point to stdout
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+
+    return logger
