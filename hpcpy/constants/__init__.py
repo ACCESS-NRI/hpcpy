@@ -1,7 +1,6 @@
 """Common constants."""
 
 from pathlib import Path
-from hpcpy.status import Status
 
 # Location for rendered job scripts
 JOB_SCRIPT_DIR = Path.home() / ".hpcpy" / "job_scripts"

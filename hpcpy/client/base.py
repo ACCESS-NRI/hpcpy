@@ -77,7 +77,7 @@ class BaseClient:
             mod_time = datetime.fromtimestamp(os.path.getmtime(rjs))
 
             # Check if the file has expired
-            if mod_time <= threshold or force == True:
+            if mod_time <= threshold or force:
                 self._logger.debug(f"Removing {rjs}")
                 os.remove(rjs)
 
