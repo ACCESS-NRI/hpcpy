@@ -9,28 +9,44 @@ jobs:
       max-parallel: 5
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Set up Python 3.9
       uses: actions/setup-python@v2
       with:
         python-version: 3.9
-    - name: Add conda to system path
+    - name: Setup Conda
       run: |
-        # $CONDA is an environment variable pointing to the root of the miniconda directory
         echo $CONDA/bin >> $GITHUB_PATH
-    - name: Install package
+    - name: Install
       run: |
         pip install -e .
-    - name: Lint with flake8
+    - name: Syntax - black
+      run: |
+        pip install black
+        black --check .
+    - name: Syntax - ruff
+      run: |
+        pip install ruff
+        ruff check .
+    - name: Syntax - flake8
       run: |
         conda install flake8
         # stop the build if there are Python syntax errors or undefined names
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
         # exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
         flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
-    - name: Test with pytest
+    - name: Test - pytest
       env:
         HPCPY_DEV_MODE: 1
       run: |
         conda install pytest
         pytest -v
+    - name: Docs - Docstrings
+      run: |
+        pip install pydocstyle
+        pydocstyle --ignore=D107,D213,D203,D413,D105 .
+    - name: Docs - Spellcheck
+      uses: rojopolis/spellcheck-github-actions@0.42.0
+      with:
+        config_path: .github/spellcheck.yml
+        task_name: Markdown
