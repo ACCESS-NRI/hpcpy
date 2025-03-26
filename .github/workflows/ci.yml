@@ -1,4 +1,4 @@
-name: CI pytest
+name: CI
 
 on: [push]
 
