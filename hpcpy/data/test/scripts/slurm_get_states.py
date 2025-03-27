@@ -1,3 +1,5 @@
+"""Quick script to download the slurm states for development."""
+
 from bs4 import BeautifulSoup
 import requests
 
