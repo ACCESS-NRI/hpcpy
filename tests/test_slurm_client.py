@@ -69,6 +69,14 @@ def test_depends_on(client):
     assert expected == result
 
 
+def test_depends_on_normalise(client):
+    """Test that job dependency is correctly applied to the command string."""
+    expected = "sbatch --dependency=afterok:1234:3456 test.sh"
+    job2 = Job("3456", auto_update=False, client=client)
+    result = client.submit("test.sh", depends_on=["1234", job2], dry_run=True)
+    assert expected == result
+
+
 def test_delay(client):
     """Test that delay is correctly applied to the command string."""
     # Set execution to an hour's time

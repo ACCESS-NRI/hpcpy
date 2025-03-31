@@ -1,6 +1,6 @@
 """Base client object."""
 
-from hpcpy.utilities import shell, interpolate_file_template, get_logger
+from hpcpy.utilities import shell, interpolate_file_template, get_logger, ensure_list
 from hpcpy.job import Job
 import hpcpy.constants as hc
 from random import choice
@@ -413,3 +413,33 @@ class BaseClient:
         """
         directives.append(self.directive_templates[key].format(**kwargs))
         return directives
+
+    def _normalise_depends_on(self, jobs: Union[str, Job, list]) -> list:
+        """Normalise the jobs supplied by a depends_on argument into strings.
+
+        Parameters
+        ----------
+        jobs : Union[str, Job, list]
+            Job ID, Job object or a list containing either.
+
+        Returns
+        -------
+        list
+            List of Job IDs
+
+        Raises
+        ------
+        TypeError
+            When any of the objects is neither a str or a Job object.
+        """
+        normalised = list()
+        for ix, _job in enumerate(ensure_list(jobs)):
+
+            if isinstance(_job, str):
+                normalised.append(_job)
+            elif isinstance(_job, Job):
+                normalised.append(_job.id)
+            else:
+                raise TypeError(f"Object at index {ix} is neither a str or Job object.")
+
+        return normalised

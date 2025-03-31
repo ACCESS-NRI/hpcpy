@@ -2,7 +2,6 @@
 
 from hpcpy.client.base import BaseClient
 from hpcpy.constants.slurm import COMMANDS, STATUSES, DIRECTIVES, DELAY_DIRECTIVE_FMT
-import hpcpy.utilities as hu
 from datetime import datetime, timedelta
 from typing import Union
 import json
@@ -124,10 +123,13 @@ class SlurmClient(BaseClient):
 
             self._logger.debug("Job dependency specified.")
 
+            # Normalise depends_on to strs
+            depends_on = super()._normalise_depends_on(depends_on)
+
             directives = self._interpolate_directive(
                 directives,
                 "depends_on",
-                depends_on_str=":".join(hu.ensure_list(depends_on)),
+                depends_on_str=":".join(depends_on),
             )
 
         # Add delay (specified time or delta)
