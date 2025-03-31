@@ -1,8 +1,9 @@
 matrix:
 - name: Markdown
   expect_match: false
-  apsell:
+  aspell:
     mode: en
+    d: en_GB
   dictionary:
     wordlists:
     - .github/wordlist.txt
