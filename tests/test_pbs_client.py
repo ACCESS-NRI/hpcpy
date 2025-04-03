@@ -75,6 +75,15 @@ def test_depends_on(client):
     assert result == expected
 
 
+def test_depends_on_normalise(client):
+    """Test if the depends_on argument is correctly applied with a mix of strs and objects."""
+    expected = "qsub -W depend=afterok:job1:job2 test.sh"
+    job2 = Job("job2", auto_update=False, client=client)
+    result = client.submit("test.sh", depends_on=["job1", job2], dry_run=True)
+
+    assert result == expected
+
+
 def test_delay(client):
     """Test if delay is correctly applied"""
     run_at = datetime(2200, 7, 26, 12, 0, 0)

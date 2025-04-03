@@ -175,7 +175,10 @@ HPCpy implements a simple task-dependence strategy at the scheduler level, where
 === "HPCpy (Python)"
     ```python
     job1 = client.submit("job1.sh")
-    job2 = client.submit("job2.sh", depends_on=job1.id)
+    job2 = client.submit("job2.sh")
+
+    # depends_on accepts a Job ID `str`, `Job()` object, or a list containing either.
+    job3 = client.submit("job3.sh", depends_on=[job1.id, job2])
     ```
 === "PBS"
     ```shell
@@ -184,7 +187,7 @@ HPCpy implements a simple task-dependence strategy at the scheduler level, where
     ```
 
 !!! note
-    The current implementation of the `depends_on` keyword is to take a job id, or a list of job ids.
+    The `depends_on` accepts a Job ID `str`, `Job()` object, or a list containing either to maximise utility.
 
 Consider the following snippet:
 
@@ -192,17 +195,17 @@ Consider the following snippet:
 from hpcpy import get_client
 client = get_client()
 
-# Submit the first job, get the ID
-first_id = client.submit("job.sh").id
+# Submit the first job
+first_job = client.submit("job.sh")
 
 # Submit some interim jobs all requiring the first to finish
-job_ids = list()
+jobs = list()
 for x in range(3):
-    jobx_id = client.submit("job.sh", depends_on=first_id).id
-    job_ids.append(jobx_id)
+    jobx = client.submit("job.sh", depends_on=first_job)
+    job_ids.append(jobx)
 
 # Submit a final job that requires everything to have finished.
-job_last = client.submit("job.sh", depends_on=job_ids)
+job_last = client.submit("job.sh", depends_on=jobs)
 ```
 
 This will create 5 jobs:
