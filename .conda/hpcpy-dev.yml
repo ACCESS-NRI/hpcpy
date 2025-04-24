@@ -4,7 +4,7 @@ channels:
   - conda-forge
   - accessnri
   - coecms
-  - defaults
+  - nodefaults
 
 dependencies:
   - python>=3.9
