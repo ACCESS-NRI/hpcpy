@@ -4,7 +4,7 @@ channels:
   - conda-forge
   - accessnri
   - coecms
-  - default
+  - nodefaults
 
 dependencies:
   - anaconda-client
