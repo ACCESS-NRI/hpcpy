@@ -16,4 +16,3 @@ dependencies:
   - ruff
   - pip:
     - -r mkdocs-requirements.txt
-    - invoke
