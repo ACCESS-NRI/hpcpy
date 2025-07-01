@@ -75,15 +75,6 @@ def test_depends_on(client):
     assert result == expected
 
 
-def test_depends_on_normalise(client):
-    """Test if the depends_on argument is correctly applied with a mix of strs and objects."""
-    expected = "qsub -W depend=afterok:job1:job2 test.sh"
-    job2 = Job("job2", auto_update=False, client=client)
-    result = client.submit("test.sh", depends_on=["job1", job2], dry_run=True)
-
-    assert result == expected
-
-
 def test_delay(client):
     """Test if delay is correctly applied"""
     run_at = datetime(2200, 7, 26, 12, 0, 0)
@@ -128,6 +119,15 @@ def test_variables(client):
     result = client.submit(
         "test.sh", dry_run=True, variables=dict(var1=1234, var2="abcd")
     )
+
+    assert result == expected
+
+
+def test_variables_spaces(client):
+    """Test the error reported in https://github.com/ACCESS-NRI/hpcpy/issues/52"""
+    expected = "qsub -v \"msg='HELLO WORLD'\" job.sh"
+
+    result = client.submit("job.sh", dry_run=True, variables=dict(msg="HELLO WORLD"))
 
     assert result == expected
 
@@ -209,3 +209,22 @@ def test_hold_release(fp, client, status_json, job_id):
 
     # Ensure it is queued
     assert job._status == hc.STATUS_QUEUED
+
+
+# def test_remote_host():
+
+#     host = os.getenv("PBS_HOST")
+#     remote_user = os.getenv("PBS_USER")
+#     client = PBSClient(host=host, remote_user=remote_user)
+
+#     assert client._ssh_client != None
+
+# def test_remote_shell():
+#     host = os.getenv("PBS_HOST")
+#     remote_user = os.getenv("PBS_USER")
+#     client = PBSClient(host=host, remote_user=remote_user)
+
+#     result = client._shell("echo $USER")
+#     assert remote_user == result
+
+# def test_

@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from typing import Union
 import json
 from pathlib import Path
+from shlex import quote
 
 
 class PBSClient(BaseClient):
@@ -65,7 +66,20 @@ class PBSClient(BaseClient):
         str
             String formatted variables for PBS
         """
-        formatted = ",".join([f"{k}={v}" for k, v in variables.items()])
+
+        formatted = list()
+
+        for k, v in variables.items():
+
+            # Fix for broken quotes #52
+            if isinstance(v, str) and " " in v:
+                v = quote(v)
+                line = f'"{k}={v}"'
+                formatted.append(line)
+            else:
+                formatted.append(f"{k}={v}")
+
+        formatted = ",".join(formatted)
         return f"-v {formatted}"
 
     def submit(
