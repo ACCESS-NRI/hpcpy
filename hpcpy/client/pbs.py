@@ -66,7 +66,6 @@ class PBSClient(BaseClient):
         str
             String formatted variables for PBS
         """
-
         formatted = list()
 
         for k, v in variables.items():
