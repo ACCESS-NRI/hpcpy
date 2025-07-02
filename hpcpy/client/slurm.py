@@ -53,22 +53,6 @@ class SlurmClient(BaseClient):
         # Return the generic status
         return generic_status, native_full
 
-    def _render_variables(self, variables):
-        """Render the variables flag for PBS.
-
-        Parameters
-        ----------
-        variables : dict
-            Dictionary of variables
-
-        Returns
-        -------
-        str
-            String formatted variables for PBS
-        """
-        formatted = ",".join([f"{k}={v}" for k, v in variables.items()])
-        return f"-v {formatted}"
-
     def submit(
         self,
         job_script: Union[str, Path],

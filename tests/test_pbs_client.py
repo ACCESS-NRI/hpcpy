@@ -132,6 +132,15 @@ def test_variables(client):
     assert result == expected
 
 
+def test_variables_spaces(client):
+    """Test the error reported in https://github.com/ACCESS-NRI/hpcpy/issues/52"""
+    expected = "qsub -v \"msg='HELLO WORLD'\" job.sh"
+
+    result = client.submit("job.sh", dry_run=True, variables=dict(msg="HELLO WORLD"))
+
+    assert result == expected
+
+
 def test_variables_empty(client):
     """Test passing empty variables dict to the qsub command works as expected."""
     expected = "qsub test.sh"
