@@ -1,8 +1,8 @@
 """Client Factory."""
 
+from hpcpy.client.direct import DirectClient
 from hpcpy.client.pbs import PBSClient
 from hpcpy.client.slurm import SlurmClient
-import hpcpy.exceptions as hx
 from hpcpy.utilities import shell
 from typing import Union
 
@@ -13,6 +13,8 @@ class ClientFactory:
     def get_client(self, *args, **kwargs) -> Union[PBSClient, SlurmClient]:
         """Get a client object based on what kind of scheduler we are using.
 
+        Falls back to DirectClient when no scheduler can be detected.
+
         Arguments:
         ----------
         **kwargs
@@ -20,13 +22,8 @@ class ClientFactory:
 
         Returns
         -------
-        Union[PBSClient, SlurmClient]
+        Union[PBSClient, SlurmClient, DirectClient]
             Client object suitable for the detected scheduler.
-
-        Raises
-        ------
-        hx.NoClientException
-            When no scheduler can be detected.
         """
         clients = dict(qsub=PBSClient, sbatch=SlurmClient)
 
@@ -35,4 +32,5 @@ class ClientFactory:
             if shell(f"which {cmd}", check=False).returncode == 0:
                 return client(*args, **kwargs)
 
-        raise hx.NoClientException()
+        # No scheduler found; fall back to direct execution
+        return DirectClient(*args, **kwargs)
