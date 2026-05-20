@@ -16,3 +16,4 @@ dependencies:
   - ruff
   - pip:
     - -r mkdocs-requirements.txt
+    - pytest-subprocess==1.5.3
