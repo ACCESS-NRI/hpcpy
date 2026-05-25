@@ -86,3 +86,13 @@ def test_delete(client, job_script_path, status_finished):
 
     # Check it has finished
     assert job.status() == status_finished
+
+
+def test_submit_variables(client, job_script_path):
+    """Test client.submit() with directives."""
+
+    variables = dict(var1="SUCCESSFUL TEST", var2=1, var3=10.0)
+
+    # Dry-submit the job, get the result
+    result = client.submit("test.sh", variables=variables, dry_run=True)
+    assert result == "var1='SUCCESSFUL TEST' var2=1 var3=10.0 bash test.sh"

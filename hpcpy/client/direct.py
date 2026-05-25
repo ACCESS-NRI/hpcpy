@@ -3,6 +3,7 @@
 import subprocess
 import shlex
 import os
+import re
 from pathlib import Path
 from typing import Union
 
@@ -64,7 +65,7 @@ class DirectClient(BaseClient):
         directives: list = None,
         render: bool = False,
         dry_run: bool = False,
-        variables: dict = None,
+        variables: dict = dict(),
         **context,
     ):
         """Submit a job by running it directly as a local process.
@@ -89,12 +90,23 @@ class DirectClient(BaseClient):
         Union[Job, str]
             Submitted job object, or the command string if dry_run=True.
         """
+        # Sanitize the variables, if there are any, then create string version and add to context
+        variables_sanitized = self._sanitize_dict(variables)
+        variables_str = []
+        for key, value in variables_sanitized.items():
+            variables_str.append(f"{key}={value}")
+
+        context["variables_str"] = (
+            " ".join(variables_str) + " " if variables_str else ""
+        )
+
         # Delegate command assembly (directive rendering, job script rendering) to the parent
         cmd = super().submit(
             job_script=job_script,
             directives=directives if isinstance(directives, list) else [],
             render=render,
             dry_run=True,
+            variables=self._sanitize_dict(variables),
             **context,
         )
 
@@ -102,8 +114,8 @@ class DirectClient(BaseClient):
             return cmd
 
         _env = os.environ.copy()
-        if isinstance(variables, dict) and variables:
-            _env.update({k: str(v) for k, v in variables.items()})
+        if isinstance(variables_sanitized, dict) and variables_sanitized:
+            _env.update({k: str(v) for k, v in variables_sanitized.items()})
 
         proc = subprocess.Popen(shlex.split(cmd), env=_env)
         job_id = str(proc.pid)
@@ -143,3 +155,56 @@ class DirectClient(BaseClient):
                 break
 
         return generic_status, {"pid": job_id, "state": raw}
+
+    def _sanitize_dict(self, user_dict: dict) -> dict:
+        """Sanitize user-supplied dict for use with subprocess.run.
+
+        Parameters
+        ----------
+        user_dict : dict
+            Key/value pairs.
+
+        Returns
+        -------
+        dict
+            Sanitized version of the dict.
+
+        Raises
+        ------
+        ValueError
+            When a key is invalid.
+            When a value is invalid.
+            When a null byte is provided.
+        """
+        VALID_KEY = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+        sanitized = dict()
+
+        for key, value in user_dict.items():
+
+            # Validate key
+            if not isinstance(key, str):
+                raise ValueError(f"Key {key!r} must be a string")
+
+            if not VALID_KEY.match(key):
+                raise ValueError(
+                    f"Key {key!r} is invalid: must start with a letter or underscore "
+                    f"and contain only alphanumeric characters and underscores"
+                )
+
+            # Validate and sanitize value
+            if not isinstance(value, (str, int, float, bool)):
+                raise ValueError(
+                    f"Value for key {key!r} must be a string, int, float, or bool; "
+                    f"got {type(value).__name__}"
+                )
+
+            str_value = str(value)
+
+            # Reject null bytes — they silently truncate strings in most shells
+            if "\x00" in str_value:
+                raise ValueError(f"Value for key {key!r} contains a null byte")
+
+            # Add to dict and quote for safety
+            sanitized[key] = shlex.quote(str_value)
+
+        return sanitized

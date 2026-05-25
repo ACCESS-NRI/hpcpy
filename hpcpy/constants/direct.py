@@ -5,7 +5,7 @@ import hpcpy.constants as hc
 
 # Commands
 COMMANDS = dict(
-    submit="bash {job_script}",
+    submit="{variables_str}bash {job_script}",
     status="ps -p {job_id} -o stat=",
     delete="kill {job_id}",
     hold="kill -s STOP {job_id}",
@@ -45,5 +45,11 @@ STATUSES = [
         "FINISHED",
         "Job has finished, or never existed",
         generic=hc.STATUS_FINISHED,
+    ),
+    Status(
+        "E",
+        "EXITING",
+        "Job has finished, or never existed",
+        generic=hc.STATUS_EXITING,
     ),
 ]
