@@ -10,7 +10,9 @@ from typing import Union
 class ClientFactory:
     """An object that agnostically selects a scheduler."""
 
-    def get_client(self, *args, **kwargs) -> Union[PBSClient, SlurmClient, DirectClient]:
+    def get_client(
+        self, *args, **kwargs
+    ) -> Union[PBSClient, SlurmClient, DirectClient]:
         """Get a client object based on what kind of scheduler we are using.
 
         Falls back to DirectClient when no scheduler can be detected.

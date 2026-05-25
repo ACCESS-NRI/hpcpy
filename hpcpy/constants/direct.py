@@ -18,9 +18,32 @@ DIRECTIVES = dict()
 # Statuses - mapped from ps(1) stat codes
 STATUSES = [
     Status("R", "RUNNING", "Process is running.", generic=hc.STATUS_RUNNING),
-    Status("S", "SLEEPING", "Process is sleeping (interruptible).", generic=hc.STATUS_RUNNING),
-    Status("D", "DISK_SLEEP", "Process is in uninterruptible disk sleep.", generic=hc.STATUS_RUNNING),
+    Status(
+        "S",
+        "SLEEPING",
+        "Process is sleeping (interruptible).",
+        generic=hc.STATUS_RUNNING,
+    ),
+    Status(
+        "D",
+        "DISK_SLEEP",
+        "Process is in uninterruptible disk sleep.",
+        generic=hc.STATUS_RUNNING,
+    ),
     Status("I", "IDLE", "Process is idle.", generic=hc.STATUS_RUNNING),
-    Status("T", "STOPPED", "Process has been stopped by a signal.", generic=hc.STATUS_SUSPENDED),
-    Status("Z", "ZOMBIE", "Process is a zombie (awaiting reaping).", generic=hc.STATUS_EXITING),
+    Status(
+        "T", "STOPPED", "Process has been stopped by a signal.", generic=hc.STATUS_HELD
+    ),
+    Status(
+        "Z",
+        "ZOMBIE",
+        "Process is a zombie (awaiting reaping).",
+        generic=hc.STATUS_EXITING,
+    ),
+    Status(
+        "F",
+        "FINISHED",
+        "Job has finished, or never existed",
+        generic=hc.STATUS_FINISHED,
+    ),
 ]
