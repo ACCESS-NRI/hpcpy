@@ -21,3 +21,8 @@ def test_import_pbs_toplevel():
 def test_import_slurm_toplevel():
     """Test getting a SlurmClient at the top level."""
     _import_from("hpcpy", "SlurmClient")
+
+
+def test_import_direct_toplevel():
+    """Test getting a DirectClient at the top level."""
+    _import_from("hpcpy", "DirectClient")
