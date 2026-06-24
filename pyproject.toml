@@ -43,6 +43,7 @@ requires = [
 
 [tool.setuptools.packages.find]
 where = ["."]
+include = ["hpcpy*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "hpcpy.__version__"}
