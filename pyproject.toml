@@ -6,10 +6,10 @@ description = "A prototype Python client for interacting with HPC scheduling sys
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: Apache 2.0 License",
+    "License-Expression :: Apache License 2.0",
     "Programming Language :: Python :: 3.11",
     "Topic :: Scientific/Engineering",
-    "Operating System :: OS Independent"
+    "Operating System :: Unix"
 ]
 readme = "README.md"
 license = {file="LICENSE"}
