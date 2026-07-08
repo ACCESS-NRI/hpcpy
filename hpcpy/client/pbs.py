@@ -123,7 +123,7 @@ class PBSClient(BaseClient):
             List of storage mounts to apply, by default None
         variables: dict, optional
             Key/value environment variable pairs added to the qsub command.
-        module purge: bool, optional
+        module_purge: bool, optional
             Add a `module purge` command to `{modules_head}`, bu default False.
         module_use: str optional
             Path to supply to a `module use` command in `{modules_head}`.
