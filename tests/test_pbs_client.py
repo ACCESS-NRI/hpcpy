@@ -270,4 +270,4 @@ def test_modules_head_full(client):
 def test_modules_head_none(client):
     """Test empty `{modules_head}` generation."""
     result = client._generate_modules_head(False, None, None)
-    assert result == None
+    assert result is None
