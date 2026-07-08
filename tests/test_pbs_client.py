@@ -218,3 +218,56 @@ def test_hold_release(fp, client, status_json, job_id):
 
     # Ensure it is queued
     assert job._status == hc.STATUS_QUEUED
+
+
+def test_modules_head_no_purge(client):
+    """Test `{modules_head}` generation with no `purge` directive."""
+
+    result = client._generate_modules_head(False, "/path/to/modules", "module1")
+    expected = "\n".join(["module use /path/to/modules", "module load module1"])
+
+    assert result == expected
+
+
+def test_modules_head_no_use(client):
+    """Test `{modules_head}` generation with no `use` directive."""
+
+    result = client._generate_modules_head(True, None, "module1")
+    expected = "\n".join(["module purge", "module load module1"])
+
+    assert result == expected
+
+
+def test_modules_head_multiple_modules(client):
+    """Test `{modules_head}` generation with multiple modules."""
+
+    result = client._generate_modules_head(
+        True, "/path/to/modules", ["module1", "module2"]
+    )
+    expected = "\n".join(
+        [
+            "module purge",
+            "module use /path/to/modules",
+            "module load module1",
+            "module load module2",
+        ]
+    )
+
+    assert result == expected
+
+
+def test_modules_head_full(client):
+    """Test full `{modules_head}` generation."""
+
+    result = client._generate_modules_head(True, "/path/to/modules", "module1")
+    expected = "\n".join(
+        ["module purge", "module use /path/to/modules", "module load module1"]
+    )
+
+    assert result == expected
+
+
+def test_modules_head_none(client):
+    """Test empty `{modules_head}` generation."""
+    result = client._generate_modules_head(False, None, None)
+    assert result == None
