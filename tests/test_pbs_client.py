@@ -220,54 +220,45 @@ def test_hold_release(fp, client, status_json, job_id):
     assert job._status == hc.STATUS_QUEUED
 
 
-def test_modules_head_no_purge(client):
-    """Test `{modules_head}` generation with no `purge` directive."""
+@pytest.mark.parametrize(
+    "do_purge, module_use, modules, pops",
+    [
+        # Purge, no use
+        (True, None, "module1", [1, 2, 4]),
+        # No purge, no use
+        (False, None, "module1", [0, 1, 2, 4]),
+        # Purge, use
+        (True, "/path/to/modules1", "module1", [2, 4]),
+        # No purge, use
+        (False, "/path/to/modules1", "module1", [0, 2, 4]),
+        # Multiple use
+        (True, ["/path/to/modules1", "/path/to/modules2"], "module1", [4]),
+        # Multiple modules, multiple paths
+        (True, ["/path/to/modules1", "/path/to/modules2"], ["module1", "module2"], []),
+        # Nothing
+        (False, None, None, [0, 1, 2, 3, 4]),
+    ],
+)
+def test_modules_head(client, do_purge, module_use, modules, pops):
+    """Test {{ modules_head }} generation."""
 
-    result = client._generate_modules_head(False, "/path/to/modules", "module1")
-    expected = "\n".join(["module use /path/to/modules", "module load module1"])
+    # Generate the block
+    result = client._generate_modules_head(do_purge, module_use, modules)
 
-    assert result == expected
+    # We start from the full example, then remove what we don't need
+    full_example = [
+        "module purge",
+        "module use /path/to/modules1",
+        "module use /path/to/modules2",
+        "module load module1",
+        "module load module2",
+    ]
 
+    # Copy full example
+    expected = full_example
 
-def test_modules_head_no_use(client):
-    """Test `{modules_head}` generation with no `use` directive."""
+    # Reverse the indices so they are all still valid as things are popped.
+    for pop in sorted(pops, reverse=True):
+        expected.pop(pop)
 
-    result = client._generate_modules_head(True, None, "module1")
-    expected = "\n".join(["module purge", "module load module1"])
-
-    assert result == expected
-
-
-def test_modules_head_multiple_modules(client):
-    """Test `{modules_head}` generation with multiple modules."""
-
-    result = client._generate_modules_head(
-        True, "/path/to/modules", ["module1", "module2"]
-    )
-    expected = "\n".join(
-        [
-            "module purge",
-            "module use /path/to/modules",
-            "module load module1",
-            "module load module2",
-        ]
-    )
-
-    assert result == expected
-
-
-def test_modules_head_full(client):
-    """Test full `{modules_head}` generation."""
-
-    result = client._generate_modules_head(True, "/path/to/modules", "module1")
-    expected = "\n".join(
-        ["module purge", "module use /path/to/modules", "module load module1"]
-    )
-
-    assert result == expected
-
-
-def test_modules_head_none(client):
-    """Test empty `{modules_head}` generation."""
-    result = client._generate_modules_head(False, None, None)
-    assert result is None
+    assert result == "\n".join(expected)

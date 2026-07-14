@@ -124,11 +124,11 @@ class PBSClient(BaseClient):
         variables: dict, optional
             Key/value environment variable pairs added to the qsub command.
         module_purge: bool, optional
-            Add a `module purge` command to `{modules_head}`, bu default False.
+            Add a `module purge` command to `{{ modules_head }}`, by default False.
         module_use: str optional
-            Path to supply to a `module use` command in `{modules_head}`.
+            Path(s) to supply to a `module use` command in `{{ modules_head }}`.
         modules: Union[str,list], optional
-            Modules to load with `module load` in `{modules_head}`.
+            Modules to load with `module load` in `{{ modules_head }}`.
         **context:
             Additional key/value pairs to be added to command/jobscript interpolation.
 
@@ -238,9 +238,27 @@ class PBSClient(BaseClient):
         return generic_status, native_full
 
     def _generate_modules_head(
-        self, module_purge: bool, module_use: str, modules: Union[str, list]
+        self,
+        module_purge: bool,
+        module_use: Union[str, list],
+        modules: Union[str, list],
     ) -> str:
+        """Generate `{{ modules_head }}` template tag for job submission scripts.
 
+        Parameters
+        ----------
+        module_purge : bool
+            Whether to add a `module purge` at the start of the tag.
+        module_use : Union[str, list]
+            A string path or list of paths to populate `module use` commands.
+        modules : Union[str, list]
+            A string module or list of modules to populate `module load` commands.
+
+        Returns
+        -------
+        str
+            A formatted header block.
+        """
         modules_head = list()
 
         # Add the purge
@@ -249,7 +267,8 @@ class PBSClient(BaseClient):
 
         # The the use
         if module_use:
-            modules_head.append(f"module use {module_use}")
+            for _module_use in hu.ensure_list(module_use):
+                modules_head.append(f"module use {_module_use}")
 
         # Add each module
         if modules:
@@ -258,6 +277,6 @@ class PBSClient(BaseClient):
 
         # Bail out for empty head
         if len(modules_head) == 0:
-            return None
+            return ""
 
         return "\n".join(modules_head)
