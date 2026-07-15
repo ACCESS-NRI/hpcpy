@@ -7,6 +7,7 @@ from typing import Union
 import json
 from pathlib import Path
 from shlex import quote
+import hpcpy.utilities as hu
 
 
 class PBSClient(BaseClient):
@@ -93,6 +94,9 @@ class PBSClient(BaseClient):
         walltime: timedelta = None,
         storage: list = None,
         variables: dict = None,
+        module_purge: bool = False,
+        module_use: str = None,
+        modules: Union[str, list] = None,
         **context,
     ):
         """Submit a job to the scheduler.
@@ -119,8 +123,14 @@ class PBSClient(BaseClient):
             List of storage mounts to apply, by default None
         variables: dict, optional
             Key/value environment variable pairs added to the qsub command.
+        module_purge: bool, optional
+            Add a `module purge` command to `{{ modules_head }}`, by default False.
+        module_use: str optional
+            Path(s) to supply to a `module use` command in `{{ modules_head }}`.
+        modules: Union[str,list], optional
+            Modules to load with `module load` in `{{ modules_head }}`.
         **context:
-            Additional key/value pairs to be added to command/jobscript interpolation
+            Additional key/value pairs to be added to command/jobscript interpolation.
 
         Returns
         -------
@@ -168,6 +178,11 @@ class PBSClient(BaseClient):
         # Add variables
         if isinstance(variables, dict) and len(variables) > 0:
             directives.append(self._render_variables(variables))
+
+        # Generate modules_head
+        modules_head = self._generate_modules_head(module_purge, module_use, modules)
+        if modules_head:
+            context["modules_head"] = modules_head
 
         # Call the super
         job_or_cmd = super().submit(
@@ -221,3 +236,47 @@ class PBSClient(BaseClient):
 
         # Return the generic status
         return generic_status, native_full
+
+    def _generate_modules_head(
+        self,
+        module_purge: bool,
+        module_use: Union[str, list],
+        modules: Union[str, list],
+    ) -> str:
+        """Generate `{{ modules_head }}` template tag for job submission scripts.
+
+        Parameters
+        ----------
+        module_purge : bool
+            Whether to add a `module purge` at the start of the tag.
+        module_use : Union[str, list]
+            A string path or list of paths to populate `module use` commands.
+        modules : Union[str, list]
+            A string module or list of modules to populate `module load` commands.
+
+        Returns
+        -------
+        str
+            A formatted header block.
+        """
+        modules_head = list()
+
+        # Add the purge
+        if module_purge:
+            modules_head.append("module purge")
+
+        # The the use
+        if module_use:
+            for _module_use in hu.ensure_list(module_use):
+                modules_head.append(f"module use {_module_use}")
+
+        # Add each module
+        if modules:
+            for module in hu.ensure_list(modules):
+                modules_head.append(f"module load {module}")
+
+        # Bail out for empty head
+        if len(modules_head) == 0:
+            return ""
+
+        return "\n".join(modules_head)

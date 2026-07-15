@@ -207,3 +207,8 @@ def get_logger(name="hpcpy", level="debug"):
     logger.addHandler(handler)
 
     return logger
+
+
+def is_command_available(cmd: str) -> bool:
+    """Test if a given command is available."""
+    return shell(f"which {cmd}", check=False).returncode == 0

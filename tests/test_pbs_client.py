@@ -218,3 +218,47 @@ def test_hold_release(fp, client, status_json, job_id):
 
     # Ensure it is queued
     assert job._status == hc.STATUS_QUEUED
+
+
+@pytest.mark.parametrize(
+    "do_purge, module_use, modules, pops",
+    [
+        # Purge, no use
+        (True, None, "module1", [1, 2, 4]),
+        # No purge, no use
+        (False, None, "module1", [0, 1, 2, 4]),
+        # Purge, use
+        (True, "/path/to/modules1", "module1", [2, 4]),
+        # No purge, use
+        (False, "/path/to/modules1", "module1", [0, 2, 4]),
+        # Multiple use
+        (True, ["/path/to/modules1", "/path/to/modules2"], "module1", [4]),
+        # Multiple modules, multiple paths
+        (True, ["/path/to/modules1", "/path/to/modules2"], ["module1", "module2"], []),
+        # Nothing
+        (False, None, None, [0, 1, 2, 3, 4]),
+    ],
+)
+def test_modules_head(client, do_purge, module_use, modules, pops):
+    """Test {{ modules_head }} generation."""
+
+    # Generate the block
+    result = client._generate_modules_head(do_purge, module_use, modules)
+
+    # We start from the full example, then remove what we don't need
+    full_example = [
+        "module purge",
+        "module use /path/to/modules1",
+        "module use /path/to/modules2",
+        "module load module1",
+        "module load module2",
+    ]
+
+    # Copy full example
+    expected = full_example
+
+    # Reverse the indices so they are all still valid as things are popped.
+    for pop in sorted(pops, reverse=True):
+        expected.pop(pop)
+
+    assert result == "\n".join(expected)
