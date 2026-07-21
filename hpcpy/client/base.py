@@ -46,6 +46,9 @@ class BaseClient:
         # Set up a shared logger
         self._logger = get_logger()
 
+        # Track command history
+        self.history = []
+
     def _clean_rendered_job_scripts(self, force=False) -> None:
         """Clean the rendered job scripts from the JOB_SCRIPT_DIR.
 
@@ -250,6 +253,9 @@ class BaseClient:
         str
             Result from the underlying called command.
         """
+        # Add the command to the command history
+        self.history.append(cmd)
+
         result = shell(cmd, env=env)
 
         if decode:

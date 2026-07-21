@@ -262,3 +262,15 @@ def test_modules_head(client, do_purge, module_use, modules, pops):
         expected.pop(pop)
 
     assert result == "\n".join(expected)
+
+
+def test_command_history(fp, client, job_id):
+    """Test if the submit command is executed."""
+    job_script = "test.sh"
+
+    # Register the qsub command
+    fp.register(f"qsub {job_script}".split(), stdout=job_id)
+
+    _ = client.submit(job_script)
+
+    assert client.history[-1] == "qsub test.sh"
