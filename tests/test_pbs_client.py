@@ -271,6 +271,10 @@ def test_command_history(fp, client, job_id):
     # Register the qsub command
     fp.register(f"qsub {job_script}".split(), stdout=job_id)
 
-    _ = client.submit(job_script)
+    job = client.submit(job_script)
 
+    # Test that the history comes out of the client
     assert client.history[-1] == "qsub test.sh"
+
+    # And also the job
+    assert job.history == client.history
