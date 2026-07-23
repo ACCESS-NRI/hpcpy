@@ -94,3 +94,14 @@ class Job:
             )
             + ")"
         )
+
+    @property
+    def history(self):
+        """Gets the command history for the job.
+
+        Returns
+        -------
+        list
+            Command history from the client.
+        """
+        return self._client.history
