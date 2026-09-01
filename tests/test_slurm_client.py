@@ -1,11 +1,13 @@
 """SLURM Client Tests."""
 
-import pytest
-from hpcpy.client.slurm import SlurmClient
-import hpcpy.utilities as hu
-import hpcpy.constants as hc
-from hpcpy.job import Job
 import datetime
+
+import pytest
+
+import hpcpy.constants as hc
+import hpcpy.utilities as hu
+from hpcpy.client.slurm import SlurmClient
+from hpcpy.job import Job
 
 
 @pytest.fixture

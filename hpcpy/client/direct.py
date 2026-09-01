@@ -1,17 +1,17 @@
 """Direct execution client (no scheduler)."""
 
-import subprocess
-import shlex
 import os
 import re
+import shlex
+import subprocess
 from pathlib import Path
 from typing import Union
 
+import hpcpy.constants as hc
 from hpcpy.client.base import BaseClient
 from hpcpy.constants.direct import COMMANDS, DIRECTIVES, STATUSES
-from hpcpy.utilities import shell
 from hpcpy.job import Job
-import hpcpy.constants as hc
+from hpcpy.utilities import shell
 
 
 class DirectClient(BaseClient):

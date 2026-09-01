@@ -1,19 +1,20 @@
 """PBS implementation."""
 
+import json
+from datetime import datetime, timedelta
+from pathlib import Path
+from shlex import quote
+from typing import Union
+
+import hpcpy.utilities as hu
 from hpcpy.client.base import BaseClient
 from hpcpy.constants.pbs import (
     COMMANDS,
-    DIRECTIVES,
-    STATUSES,
     DELAY_DIRECTIVE_FMT,
     DEPENDENCY,
+    DIRECTIVES,
+    STATUSES,
 )
-from datetime import datetime, timedelta
-from typing import Union
-import json
-from pathlib import Path
-from shlex import quote
-import hpcpy.utilities as hu
 
 
 class PBSClient(BaseClient):

@@ -1,7 +1,7 @@
 """Constants for the PBS implementation."""
 
-from hpcpy.status import Status
 import hpcpy.constants as hc
+from hpcpy.status import Status
 
 DELAY_DIRECTIVE_FMT = "%Y%m%d%H%M.%S"
 

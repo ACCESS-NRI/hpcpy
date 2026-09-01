@@ -1,6 +1,7 @@
 """Tests for the Job class with DirectClient."""
 
 import pytest
+
 import hpcpy.utilities as hu
 from hpcpy import DirectClient
 

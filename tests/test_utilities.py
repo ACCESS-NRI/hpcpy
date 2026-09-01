@@ -1,7 +1,7 @@
 """Tests for utilities.py"""
 
-import hpcpy.utilities as hu
 import hpcpy.exceptions as hx
+import hpcpy.utilities as hu
 
 
 def test_interpolate_string_template():

@@ -1,18 +1,19 @@
 """SLURM Client."""
 
+import json
+import os
+from datetime import datetime, timedelta
+from pathlib import Path
+from typing import Union
+
 from hpcpy.client.base import BaseClient
 from hpcpy.constants.slurm import (
     COMMANDS,
-    STATUSES,
-    DIRECTIVES,
     DELAY_DIRECTIVE_FMT,
     DEPENDENCY,
+    DIRECTIVES,
+    STATUSES,
 )
-from datetime import datetime, timedelta
-from typing import Union
-import json
-from pathlib import Path
-import os
 
 
 class SlurmClient(BaseClient):

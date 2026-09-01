@@ -1,9 +1,11 @@
 """Client tests."""
 
-import pytest
-from hpcpy import PBSClient
-import hpcpy.utilities as hu
 import os
+
+import pytest
+
+import hpcpy.utilities as hu
+from hpcpy import PBSClient
 
 
 @pytest.fixture(autouse=True)

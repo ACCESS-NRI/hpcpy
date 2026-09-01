@@ -1,7 +1,7 @@
 """Quick script to download the slurm states for development."""
 
-from bs4 import BeautifulSoup
 import requests
+from bs4 import BeautifulSoup
 
 url = "https://slurm.schedmd.com/job_state_codes.html"
 

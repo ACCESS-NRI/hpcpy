@@ -1,10 +1,11 @@
 """Client Factory."""
 
+from typing import Union
+
 from hpcpy.client.direct import DirectClient
 from hpcpy.client.pbs import PBSClient
 from hpcpy.client.slurm import SlurmClient
 from hpcpy.utilities import shell
-from typing import Union
 
 
 class ClientFactory:

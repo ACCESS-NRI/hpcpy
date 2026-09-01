@@ -1,10 +1,12 @@
-import pytest
-from hpcpy import PBSClient
-import hpcpy.utilities as hu
-import hpcpy.constants as hc
-from hpcpy.job import Job
-from datetime import datetime, timedelta
 import json
+from datetime import datetime, timedelta
+
+import pytest
+
+import hpcpy.constants as hc
+import hpcpy.utilities as hu
+from hpcpy import PBSClient
+from hpcpy.job import Job
 
 
 @pytest.fixture

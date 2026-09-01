@@ -1,11 +1,12 @@
 """Tests for the Job class."""
 
 import pytest
-import hpcpy.utilities as hu
+
 import hpcpy.constants as hc
+import hpcpy.utilities as hu
+from hpcpy import PBSClient
 from hpcpy.constants.pbs import COMMANDS
 from hpcpy.job import Job
-from hpcpy import PBSClient
 
 
 @pytest.fixture

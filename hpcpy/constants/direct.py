@@ -1,7 +1,7 @@
 """Constants for direct execution (no scheduler)."""
 
-from hpcpy.status import Status
 import hpcpy.constants as hc
+from hpcpy.status import Status
 
 # Commands
 COMMANDS = dict(
