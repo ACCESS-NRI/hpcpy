@@ -84,6 +84,59 @@ def test_depends_on_normalise(client):
     assert result == expected
 
 
+def test_depends_on_explicit_state(client):
+    """Test if a single (state, job) tuple is correctly applied."""
+    expected = "qsub -W depend=afternotok:job1 test.sh"
+    result = client.submit("test.sh", depends_on=[("afternotok", "job1")], dry_run=True)
+
+    assert result == expected
+
+
+def test_depends_on_mixed_states(client):
+    """Test a mix of bare jobs (assumed afterok) and explicit-state tuples."""
+    expected = "qsub -W depend=afterok:job1,afternotok:job2 test.sh"
+    job2 = Job("job2", auto_update=False, client=client)
+    result = client.submit(
+        "test.sh", depends_on=["job1", ("afternotok", job2)], dry_run=True
+    )
+
+    assert result == expected
+
+
+def test_depends_on_grouped_same_state(client):
+    """Test that multiple jobs sharing the same explicit state are grouped together."""
+    expected = "qsub -W depend=afterany:job1:job2,afterok:job3 test.sh"
+    result = client.submit(
+        "test.sh",
+        depends_on=[("afterany", "job1"), ("afterany", "job2"), "job3"],
+        dry_run=True,
+    )
+
+    assert result == expected
+
+
+def test_depends_on_before_state(client):
+    """Test a PBS-specific 'before' family state, which SLURM does not support."""
+    expected = "qsub -W depend=beforeok:job1 test.sh"
+    result = client.submit("test.sh", depends_on=[("beforeok", "job1")], dry_run=True)
+
+    assert result == expected
+
+
+def test_depends_on_unsupported_state(client):
+    """Test that an unknown dependency state raises a ValueError."""
+    with pytest.raises(ValueError):
+        client.submit("test.sh", depends_on=[("bogus", "job1")], dry_run=True)
+
+
+def test_depends_on_invalid_tuple(client):
+    """Test that a tuple not of length 2 raises a TypeError."""
+    with pytest.raises(TypeError):
+        client.submit(
+            "test.sh", depends_on=[("afterok", "job1", "extra")], dry_run=True
+        )
+
+
 def test_delay(client):
     """Test if delay is correctly applied"""
     run_at = datetime(2200, 7, 26, 12, 0, 0)

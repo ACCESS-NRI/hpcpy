@@ -18,9 +18,22 @@ COMMANDS = dict(
 # Directives
 DIRECTIVES = dict(
     delay="-a {delay_str}",
-    depends_on="-W depend=afterok:{depends_on_str}",
+    depends_on="-W depend={depends_on_str}",
     queue="-q {queue}",
     walltime="-l walltime={walltime_str}",
+)
+
+# Job dependency states (https://ncar-hpc-docs.readthedocs.io/en/latest/pbs/job-dependencies/)
+# PBS is the common/canonical implementation - other schedulers map onto these keys.
+DEPENDENCY = dict(
+    after="after",
+    afterok="afterok",
+    afternotok="afternotok",
+    afterany="afterany",
+    before="before",
+    beforeok="beforeok",
+    beforenotok="beforenotok",
+    beforeany="beforeany",
 )
 
 # Statuses

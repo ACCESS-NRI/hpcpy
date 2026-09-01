@@ -22,9 +22,19 @@ COMMANDS = dict(
 # Directives
 DIRECTIVES = dict(
     delay="--begin={delay_str}",
-    depends_on="--dependency=afterok:{depends_on_str}",
+    depends_on="--dependency={depends_on_str}",
     queue="-p {queue}",
     walltime="--time {walltime_str}",
+)
+
+# Job dependency states (https://slurm.schedmd.com/sbatch.html), keyed by their
+# PBS-equivalent name since PBS is the common/canonical implementation.
+# SLURM has no equivalent to PBS's "before*" states, so they are omitted here.
+DEPENDENCY = dict(
+    after="after",
+    afterok="afterok",
+    afternotok="afternotok",
+    afterany="afterany",
 )
 
 # SLURM status codes

@@ -1,7 +1,13 @@
 """SLURM Client."""
 
 from hpcpy.client.base import BaseClient
-from hpcpy.constants.slurm import COMMANDS, STATUSES, DIRECTIVES, DELAY_DIRECTIVE_FMT
+from hpcpy.constants.slurm import (
+    COMMANDS,
+    STATUSES,
+    DIRECTIVES,
+    DELAY_DIRECTIVE_FMT,
+    DEPENDENCY,
+)
 from datetime import datetime, timedelta
 from typing import Union
 import json
@@ -27,6 +33,7 @@ class SlurmClient(BaseClient):
             directive_templates=DIRECTIVES,
             statuses=STATUSES,
             status_attribute="short",
+            dependency_map=DEPENDENCY,
             *args,
             **kwargs,
         )
@@ -79,7 +86,8 @@ class SlurmClient(BaseClient):
         dry_run : bool, optional
             Return rather than executing the command, by default False
         depends_on : list, optional
-            List of job IDs with successful exit on which this job depends, by default list()
+            List of dependencies. Each element is a Job/str (assumed state
+            "afterok"), or a (state, Job or str) tuple, by default list()
         delay: Union[datetime, timedelta]
             Delay the start of this job until specific date or interval, by default None
         queue: str, optional
@@ -107,13 +115,13 @@ class SlurmClient(BaseClient):
 
             self._logger.debug("Job dependency specified.")
 
-            # Normalise depends_on to strs
-            depends_on = super()._normalise_depends_on(depends_on)
+            # Normalise into a scheduler-native dependency string
+            depends_on_str = super()._normalise_depends_on(depends_on)
 
             directives = self._interpolate_directive(
                 directives,
                 "depends_on",
-                depends_on_str=":".join(depends_on),
+                depends_on_str=depends_on_str,
             )
 
         # Add delay (specified time or delta)

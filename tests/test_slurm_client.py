@@ -77,6 +77,51 @@ def test_depends_on_normalise(client):
     assert expected == result
 
 
+def test_depends_on_explicit_state(client):
+    """Test that a single (state, job) tuple is correctly applied."""
+    expected = "sbatch --dependency=afternotok:1234 test.sh"
+    result = client.submit("test.sh", depends_on=[("afternotok", "1234")], dry_run=True)
+    assert expected == result
+
+
+def test_depends_on_mixed_states(client):
+    """Test a mix of bare jobs (assumed afterok) and explicit-state tuples."""
+    expected = "sbatch --dependency=afterok:1234,afternotok:3456 test.sh"
+    job2 = Job("3456", auto_update=False, client=client)
+    result = client.submit(
+        "test.sh", depends_on=["1234", ("afternotok", job2)], dry_run=True
+    )
+    assert expected == result
+
+
+def test_depends_on_grouped_same_state(client):
+    """Test that multiple jobs sharing the same explicit state are grouped together."""
+    expected = "sbatch --dependency=afterany:1234:3456,afterok:7890 test.sh"
+    result = client.submit(
+        "test.sh",
+        depends_on=[("afterany", "1234"), ("afterany", "3456"), "7890"],
+        dry_run=True,
+    )
+    assert expected == result
+
+
+def test_depends_on_unsupported_state(client):
+    """Test that a dependency state unsupported by SLURM raises a ValueError.
+
+    "beforeok" is a PBS-only state (SLURM has no equivalent).
+    """
+    with pytest.raises(ValueError):
+        client.submit("test.sh", depends_on=[("beforeok", "1234")], dry_run=True)
+
+
+def test_depends_on_invalid_tuple(client):
+    """Test that a tuple not of length 2 raises a TypeError."""
+    with pytest.raises(TypeError):
+        client.submit(
+            "test.sh", depends_on=[("afterok", "1234", "extra")], dry_run=True
+        )
+
+
 def test_delay(client):
     """Test that delay is correctly applied to the command string."""
     # Set execution to an hour's time
