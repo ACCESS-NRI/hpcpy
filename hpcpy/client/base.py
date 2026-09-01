@@ -45,7 +45,7 @@ class BaseClient:
         self.statuses = statuses
         self.status_attribute = status_attribute
         self.directive_templates = directive_templates
-        self.dependency_map = dependency_map if dependency_map is not None else dict()
+        self.dependency_map = dependency_map if dependency_map is not None else {}
 
         # Set up a shared logger
         self._logger = get_logger()
@@ -101,10 +101,10 @@ class BaseClient:
     def submit(
         self,
         job_script,
-        directives=list(),
+        directives=[],
         render=False,
         dry_run=False,
-        env=dict(),
+        env={},
         **context,
     ) -> Union[Job, str]:
         """Submit the job script.
@@ -452,7 +452,7 @@ class BaseClient:
         ValueError
             When a requested dependency state is not supported by this scheduler.
         """
-        grouped = dict()
+        grouped = {}
 
         for ix, item in enumerate(ensure_list(jobs)):
 

@@ -28,7 +28,7 @@ class ClientFactory:
         Union[PBSClient, SlurmClient, DirectClient]
             Client object suitable for the detected scheduler.
         """
-        clients = dict(qsub=PBSClient, sbatch=SlurmClient)
+        clients = {"qsub": PBSClient, "sbatch": SlurmClient}
 
         # Loop through the clients in order, looking for a valid scheduler
         for cmd, client in clients.items():

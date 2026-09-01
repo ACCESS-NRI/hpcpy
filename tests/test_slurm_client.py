@@ -152,12 +152,12 @@ def test_walltime(client):
 def test_variables(client):
     """Test that variables are not added to the command string (as they go into the environment in SLURM)"""
     expected = "sbatch test.sh"
-    result = client.submit("test.sh", variables=dict(test="test"), dry_run=True)
+    result = client.submit("test.sh", variables={"test": "test"}, dry_run=True)
     assert result == expected
 
 
 def test_variables_empty(client):
     """Test that empty variables are correctly omitted from the command string."""
     expected = "sbatch test.sh"
-    result = client.submit("test.sh", variables=dict(), dry_run=True)
+    result = client.submit("test.sh", variables={}, dry_run=True)
     assert result == expected

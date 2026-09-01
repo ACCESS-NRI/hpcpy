@@ -7,34 +7,34 @@ DELAY_DIRECTIVE_FMT = "%Y%m%d%H%M.%S"
 
 
 # Commands
-COMMANDS = dict(
-    submit="qsub{directives} {job_script}",
-    status="qstat -f -F json {job_id}",
-    delete="qdel {job_id}",
-    hold="qhold {job_id}",
-    release="qrls {job_id}",
-)
+COMMANDS = {
+    "submit": "qsub{directives} {job_script}",
+    "status": "qstat -f -F json {job_id}",
+    "delete": "qdel {job_id}",
+    "hold": "qhold {job_id}",
+    "release": "qrls {job_id}",
+}
 
 # Directives
-DIRECTIVES = dict(
-    delay="-a {delay_str}",
-    depends_on="-W depend={depends_on_str}",
-    queue="-q {queue}",
-    walltime="-l walltime={walltime_str}",
-)
+DIRECTIVES = {
+    "delay": "-a {delay_str}",
+    "depends_on": "-W depend={depends_on_str}",
+    "queue": "-q {queue}",
+    "walltime": "-l walltime={walltime_str}",
+}
 
 # Job dependency states (https://ncar-hpc-docs.readthedocs.io/en/latest/pbs/job-dependencies/)
 # PBS is the common/canonical implementation - other schedulers map onto these keys.
-DEPENDENCY = dict(
-    after="after",
-    afterok="afterok",
-    afternotok="afternotok",
-    afterany="afterany",
-    before="before",
-    beforeok="beforeok",
-    beforenotok="beforenotok",
-    beforeany="beforeany",
-)
+DEPENDENCY = {
+    "after": "after",
+    "afterok": "afterok",
+    "afternotok": "afternotok",
+    "afterany": "afterany",
+    "before": "before",
+    "beforeok": "beforeok",
+    "beforenotok": "beforenotok",
+    "beforeany": "beforeany",
+}
 
 # Statuses
 STATUSES = [

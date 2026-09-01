@@ -71,7 +71,7 @@ class SlurmClient(BaseClient):
         delay: Union[datetime, timedelta] = None,
         queue: str = None,
         walltime: timedelta = None,
-        variables: dict = dict(),
+        variables: dict = {},
         **context,
     ):
         """Submit a job to the scheduler.

@@ -75,7 +75,7 @@ class PBSClient(BaseClient):
         str
             String formatted variables for PBS
         """
-        formatted = list()
+        formatted = []
 
         for k, v in variables.items():
 
@@ -268,7 +268,7 @@ class PBSClient(BaseClient):
         str
             A formatted header block.
         """
-        modules_head = list()
+        modules_head = []
 
         # Add the purge
         if module_purge:

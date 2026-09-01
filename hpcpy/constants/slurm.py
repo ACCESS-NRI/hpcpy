@@ -11,31 +11,31 @@ from hpcpy.status import Status
 DELAY_DIRECTIVE_FMT = "%Y-%m-%dT%H:%M:%S"
 
 # SLURM command templates
-COMMANDS = dict(
-    submit="sbatch{directives} {job_script}",
-    status="squeue -j {job_id} --json",
-    delete="scancel {job_id}",
-    hold="scontrol hold {job_id}",
-    release="scontrol release {job_id}",
-)
+COMMANDS = {
+    "submit": "sbatch{directives} {job_script}",
+    "status": "squeue -j {job_id} --json",
+    "delete": "scancel {job_id}",
+    "hold": "scontrol hold {job_id}",
+    "release": "scontrol release {job_id}",
+}
 
 # Directives
-DIRECTIVES = dict(
-    delay="--begin={delay_str}",
-    depends_on="--dependency={depends_on_str}",
-    queue="-p {queue}",
-    walltime="--time {walltime_str}",
-)
+DIRECTIVES = {
+    "delay": "--begin={delay_str}",
+    "depends_on": "--dependency={depends_on_str}",
+    "queue": "-p {queue}",
+    "walltime": "--time {walltime_str}",
+}
 
 # Job dependency states (https://slurm.schedmd.com/sbatch.html), keyed by their
 # PBS-equivalent name since PBS is the common/canonical implementation.
 # SLURM has no equivalent to PBS's "before*" states, so they are omitted here.
-DEPENDENCY = dict(
-    after="after",
-    afterok="afterok",
-    afternotok="afternotok",
-    afterany="afterany",
-)
+DEPENDENCY = {
+    "after": "after",
+    "afterok": "afterok",
+    "afternotok": "afternotok",
+    "afterany": "afterany",
+}
 
 # SLURM status codes
 STATUSES = [

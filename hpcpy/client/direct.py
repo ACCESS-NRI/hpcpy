@@ -65,7 +65,7 @@ class DirectClient(BaseClient):
         directives: list = None,
         render: bool = False,
         dry_run: bool = False,
-        variables: dict = dict(),
+        variables: dict = {},
         **context,
     ):
         """Submit a job by running it directly as a local process.
@@ -177,7 +177,7 @@ class DirectClient(BaseClient):
             When a null byte is provided.
         """
         VALID_KEY = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
-        sanitized = dict()
+        sanitized = {}
 
         for key, value in user_dict.items():
 

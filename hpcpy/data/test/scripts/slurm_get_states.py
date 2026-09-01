@@ -15,7 +15,7 @@ if __name__ == "__main__":
     # Get the state codes
     state_tbl = soup.find_all("table")[0]
 
-    statuses = dict()
+    statuses = {}
 
     for tr in state_tbl.find_all("tr")[1:]:
         code, description = tr.find_all("td")
@@ -26,7 +26,7 @@ if __name__ == "__main__":
     print(statuses)
 
     flag_tbl = soup.find_all("table")[1]
-    flags = dict()
+    flags = {}
 
     for tr in flag_tbl.find_all("tr")[1:]:
         code, description = tr.find_all("td")
