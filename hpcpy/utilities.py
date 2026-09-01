@@ -1,15 +1,17 @@
 """Utilities."""
 
+import json
+import logging
+import shlex
 import subprocess as sp
+import sys
+from importlib import resources
+from pathlib import Path
+
 import jinja2 as j2
 import jinja2.meta as j2m
-from pathlib import Path
-from importlib import resources
+
 from hpcpy.exceptions import ShellException
-import logging
-import sys
-import shlex
-import json
 
 
 def shell(

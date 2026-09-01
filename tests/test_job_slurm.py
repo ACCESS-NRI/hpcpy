@@ -1,12 +1,14 @@
 """Tests for the Job class."""
 
+import json
+
 import pytest
-import hpcpy.utilities as hu
+
 import hpcpy.constants as hc
+import hpcpy.utilities as hu
+from hpcpy import SlurmClient
 from hpcpy.constants.slurm import COMMANDS
 from hpcpy.job import Job
-from hpcpy import SlurmClient
-import json
 
 
 @pytest.fixture

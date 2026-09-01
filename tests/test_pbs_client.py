@@ -1,10 +1,12 @@
-import pytest
-from hpcpy import PBSClient
-import hpcpy.utilities as hu
-import hpcpy.constants as hc
-from hpcpy.job import Job
-from datetime import datetime, timedelta
 import json
+from datetime import datetime, timedelta
+
+import pytest
+
+import hpcpy.constants as hc
+import hpcpy.utilities as hu
+from hpcpy import PBSClient
+from hpcpy.job import Job
 
 
 @pytest.fixture
@@ -84,6 +86,59 @@ def test_depends_on_normalise(client):
     assert result == expected
 
 
+def test_depends_on_explicit_state(client):
+    """Test if a single (state, job) tuple is correctly applied."""
+    expected = "qsub -W depend=afternotok:job1 test.sh"
+    result = client.submit("test.sh", depends_on=[("afternotok", "job1")], dry_run=True)
+
+    assert result == expected
+
+
+def test_depends_on_mixed_states(client):
+    """Test a mix of bare jobs (assumed afterok) and explicit-state tuples."""
+    expected = "qsub -W depend=afterok:job1,afternotok:job2 test.sh"
+    job2 = Job("job2", auto_update=False, client=client)
+    result = client.submit(
+        "test.sh", depends_on=["job1", ("afternotok", job2)], dry_run=True
+    )
+
+    assert result == expected
+
+
+def test_depends_on_grouped_same_state(client):
+    """Test that multiple jobs sharing the same explicit state are grouped together."""
+    expected = "qsub -W depend=afterany:job1:job2,afterok:job3 test.sh"
+    result = client.submit(
+        "test.sh",
+        depends_on=[("afterany", "job1"), ("afterany", "job2"), "job3"],
+        dry_run=True,
+    )
+
+    assert result == expected
+
+
+def test_depends_on_before_state(client):
+    """Test a PBS-specific 'before' family state, which SLURM does not support."""
+    expected = "qsub -W depend=beforeok:job1 test.sh"
+    result = client.submit("test.sh", depends_on=[("beforeok", "job1")], dry_run=True)
+
+    assert result == expected
+
+
+def test_depends_on_unsupported_state(client):
+    """Test that an unknown dependency state raises a ValueError."""
+    with pytest.raises(ValueError):
+        client.submit("test.sh", depends_on=[("bogus", "job1")], dry_run=True)
+
+
+def test_depends_on_invalid_tuple(client):
+    """Test that a tuple not of length 2 raises a TypeError."""
+    with pytest.raises(TypeError):
+        client.submit(
+            "test.sh", depends_on=[("afterok", "job1", "extra")], dry_run=True
+        )
+
+
 def test_delay(client):
     """Test if delay is correctly applied"""
     run_at = datetime(2200, 7, 26, 12, 0, 0)
@@ -126,7 +181,7 @@ def test_variables(client):
     """Test passing variables to the qsub command."""
     expected = "qsub -v var1=1234,var2=abcd test.sh"
     result = client.submit(
-        "test.sh", dry_run=True, variables=dict(var1=1234, var2="abcd")
+        "test.sh", dry_run=True, variables={"var1": 1234, "var2": "abcd"}
     )
 
     assert result == expected
@@ -136,7 +191,7 @@ def test_variables_spaces(client):
     """Test the error reported in https://github.com/ACCESS-NRI/hpcpy/issues/52"""
     expected = "qsub -v \"msg='HELLO WORLD'\" job.sh"
 
-    result = client.submit("job.sh", dry_run=True, variables=dict(msg="HELLO WORLD"))
+    result = client.submit("job.sh", dry_run=True, variables={"msg": "HELLO WORLD"})
 
     assert result == expected
 
@@ -144,7 +199,7 @@ def test_variables_spaces(client):
 def test_variables_empty(client):
     """Test passing empty variables dict to the qsub command works as expected."""
     expected = "qsub test.sh"
-    result1 = client.submit("test.sh", dry_run=True, variables=dict())
+    result1 = client.submit("test.sh", dry_run=True, variables={})
     result2 = client.submit("test.sh", dry_run=True)
 
     assert result1 == expected
