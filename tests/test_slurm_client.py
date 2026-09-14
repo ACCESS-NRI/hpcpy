@@ -161,3 +161,11 @@ def test_variables_empty(client):
     expected = "sbatch test.sh"
     result = client.submit("test.sh", variables={}, dry_run=True)
     assert result == expected
+
+
+def test_get_scheduler_info(fp):
+    """Test get_scheduler_info"""
+    fp.register(f"sbatch --version".split(), stdout="slurm 1.2.3")
+    client = SlurmClient()
+    assert client.scheduler_name == "slurm"
+    assert client.scheduler_version == "1.2.3"

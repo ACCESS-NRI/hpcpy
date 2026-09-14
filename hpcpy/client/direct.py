@@ -34,6 +34,7 @@ class DirectClient(BaseClient):
             directive_templates=DIRECTIVES,
             statuses=STATUSES,
             status_attribute="short",
+            scheduler_info=self.get_scheduler_info(),
             *args,
             **kwargs,
         )
@@ -208,3 +209,13 @@ class DirectClient(BaseClient):
             sanitized[key] = shlex.quote(str_value)
 
         return sanitized
+
+    def get_scheduler_info(self) -> tuple[str, str]:
+        """Get the scheduler info.
+
+        Returns
+        -------
+        tuple[str, str]
+            Name and version of the scheduler.
+        """
+        return "bash", os.getenv("BASH_VERSION")

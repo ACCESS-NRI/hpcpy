@@ -36,6 +36,7 @@ class PBSClient(BaseClient):
             statuses=STATUSES,
             status_attribute="short",
             dependency_map=DEPENDENCY,
+            scheduler_info=self.get_scheduler_info(),
             *args,
             **kwargs,
         )
@@ -289,3 +290,19 @@ class PBSClient(BaseClient):
             return ""
 
         return "\n".join(modules_head)
+
+    def get_scheduler_info(self) -> tuple[str, str]:
+        """Get the scheduler info.
+
+        Returns
+        -------
+        tuple[str, str]
+            Name and version of the scheduler.
+        """
+        try:
+            return (
+                "pbs",
+                self._shell("qsub --version", omit_history=True).split(" = ")[-1],
+            )
+        except:
+            return "unknown", "unknown"
