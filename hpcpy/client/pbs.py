@@ -1,13 +1,20 @@
 """PBS implementation."""
 
-from hpcpy.client.base import BaseClient
-from hpcpy.constants.pbs import COMMANDS, DIRECTIVES, STATUSES, DELAY_DIRECTIVE_FMT
-from datetime import datetime, timedelta
-from typing import Union
 import json
+from datetime import datetime, timedelta
 from pathlib import Path
 from shlex import quote
+from typing import Union
+
 import hpcpy.utilities as hu
+from hpcpy.client.base import BaseClient
+from hpcpy.constants.pbs import (
+    COMMANDS,
+    DELAY_DIRECTIVE_FMT,
+    DEPENDENCY,
+    DIRECTIVES,
+    STATUSES,
+)
 
 
 class PBSClient(BaseClient):
@@ -28,6 +35,7 @@ class PBSClient(BaseClient):
             directive_templates=DIRECTIVES,
             statuses=STATUSES,
             status_attribute="short",
+            dependency_map=DEPENDENCY,
             *args,
             **kwargs,
         )
@@ -67,7 +75,7 @@ class PBSClient(BaseClient):
         str
             String formatted variables for PBS
         """
-        formatted = list()
+        formatted = []
 
         for k, v in variables.items():
 
@@ -112,7 +120,8 @@ class PBSClient(BaseClient):
         dry_run : bool, optional
             Return rather than executing the command, by default False
         depends_on : list, optional
-            List of job IDs with successful exit on which this job depends, by default list()
+            List of dependencies. Each element is a Job/str (assumed state
+            "afterok"), or a (state, Job or str) tuple, by default list()
         delay: Union[datetime, timedelta]
             Delay the start of this job until specific date or interval, by default None
         queue: str, optional
@@ -143,13 +152,13 @@ class PBSClient(BaseClient):
         # Add job depends
         if depends_on:
 
-            # Normalise to a list of strs
-            depends_on = super()._normalise_depends_on(depends_on)
+            # Normalise into a scheduler-native dependency string
+            depends_on_str = super()._normalise_depends_on(depends_on)
 
             directives = self._interpolate_directive(
                 directives,
                 "depends_on",
-                depends_on_str=":".join(depends_on),
+                depends_on_str=depends_on_str,
             )
 
         # Add delay (specified time or delta)
@@ -259,7 +268,7 @@ class PBSClient(BaseClient):
         str
             A formatted header block.
         """
-        modules_head = list()
+        modules_head = []
 
         # Add the purge
         if module_purge:

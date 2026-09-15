@@ -1,14 +1,16 @@
 """Base client object."""
 
-from hpcpy.utilities import shell, interpolate_file_template, get_logger, ensure_list
-from hpcpy.job import Job
-import hpcpy.constants as hc
-from random import choice
-from string import ascii_uppercase
 import os
 from datetime import datetime, timedelta
-from pandas import to_timedelta
+from random import choice
+from string import ascii_uppercase
 from typing import Union
+
+from pandas import to_timedelta
+
+import hpcpy.constants as hc
+from hpcpy.job import Job
+from hpcpy.utilities import ensure_list, get_logger, interpolate_file_template, shell
 
 
 class BaseClient:
@@ -34,6 +36,7 @@ class BaseClient:
         directive_templates,
         statuses,
         status_attribute,
+        dependency_map=None,
         job_script_expiry="1H",
     ):
         # Set the command templates etc.
@@ -42,6 +45,7 @@ class BaseClient:
         self.statuses = statuses
         self.status_attribute = status_attribute
         self.directive_templates = directive_templates
+        self.dependency_map = dependency_map if dependency_map is not None else {}
 
         # Set up a shared logger
         self._logger = get_logger()
@@ -97,10 +101,10 @@ class BaseClient:
     def submit(
         self,
         job_script,
-        directives=list(),
+        directives=[],
         render=False,
         dry_run=False,
-        env=dict(),
+        env={},
         **context,
     ) -> Union[Job, str]:
         """Submit the job script.
@@ -420,32 +424,62 @@ class BaseClient:
         directives.append(self.directive_templates[key].format(**kwargs))
         return directives
 
-    def _normalise_depends_on(self, jobs: Union[str, Job, list]) -> list:
-        """Normalise the jobs supplied by a depends_on argument into strings.
+    def _normalise_depends_on(self, jobs: Union[str, Job, tuple, list]) -> str:
+        """Normalise a depends_on argument into a scheduler-native dependency string.
+
+        Each element of `jobs` may be a bare Job/str (assumed state "afterok"),
+        or a 2-tuple of (state, Job or str). States are looked up in
+        `self.dependency_map`, which translates the common/PBS-style state name
+        into whatever the concrete scheduler expects. Job IDs sharing the same
+        resolved state are grouped together.
 
         Parameters
         ----------
-        jobs : Union[str, Job, list]
-            Job ID, Job object or a list containing either.
+        jobs : Union[str, Job, tuple, list]
+            Job ID, Job object, (state, Job or ID) tuple, or a list containing
+            any mix of these.
 
         Returns
         -------
-        list
-            List of Job IDs
+        str
+            Scheduler-native dependency string, e.g. "afterok:123:124,afternotok:125"
 
         Raises
         ------
         TypeError
-            When any of the objects is neither a str or a Job object.
+            When an item is a tuple not of length 2, or its job element is
+            neither a str or a Job object.
+        ValueError
+            When a requested dependency state is not supported by this scheduler.
         """
-        normalised = list()
-        for ix, _job in enumerate(ensure_list(jobs)):
+        grouped = {}
+
+        for ix, item in enumerate(ensure_list(jobs)):
+
+            if isinstance(item, tuple):
+                if len(item) != 2:
+                    raise TypeError(
+                        f"Object at index {ix} is a tuple but is not of the form "
+                        "(state, Job or str)."
+                    )
+                state, _job = item
+            else:
+                state, _job = "afterok", item
 
             if isinstance(_job, str):
-                normalised.append(_job)
+                job_id = _job
             elif isinstance(_job, Job):
-                normalised.append(_job.id)
+                job_id = _job.id
             else:
                 raise TypeError(f"Object at index {ix} is neither a str or Job object.")
 
-        return normalised
+            if state not in self.dependency_map:
+                raise ValueError(
+                    f"Dependency state '{state}' at index {ix} is not supported "
+                    "by this scheduler."
+                )
+
+            native_state = self.dependency_map[state]
+            grouped.setdefault(native_state, []).append(job_id)
+
+        return ",".join(f"{state}:{':'.join(ids)}" for state, ids in grouped.items())

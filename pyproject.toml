@@ -54,3 +54,10 @@ versionfile_source = "hpcpy/_version.py"
 versionfile_build = "hpcpy/_version.py"
 tag_prefix = ""
 parentdir_prefix = "hpcpy-"
+
+[tool.ruff]
+# Enable the flake8-comprehensions rules
+select = ["C4"]
+
+# Automatically fix violations for these rules
+fixable = ["C4"]

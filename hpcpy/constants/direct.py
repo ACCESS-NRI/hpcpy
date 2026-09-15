@@ -1,19 +1,19 @@
 """Constants for direct execution (no scheduler)."""
 
-from hpcpy.status import Status
 import hpcpy.constants as hc
+from hpcpy.status import Status
 
 # Commands
-COMMANDS = dict(
-    submit="{variables_str}bash {job_script}",
-    status="ps -p {job_id} -o stat=",
-    delete="kill {job_id}",
-    hold="kill -s STOP {job_id}",
-    release="kill -s CONT {job_id}",
-)
+COMMANDS = {
+    "submit": "{variables_str}bash {job_script}",
+    "status": "ps -p {job_id} -o stat=",
+    "delete": "kill {job_id}",
+    "hold": "kill -s STOP {job_id}",
+    "release": "kill -s CONT {job_id}",
+}
 
 # Directives (none for direct execution)
-DIRECTIVES = dict()
+DIRECTIVES = {}
 
 # Statuses - mapped from ps(1) stat codes
 STATUSES = [

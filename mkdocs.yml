@@ -3,8 +3,27 @@ nav:
   - Home: index.md
   - Installation: installation.md
   - Usage: usage.md
+  - Job Dependency: dependency.md
 theme: 
   name: material
+  palette:
+    # Palette toggle for Light Mode
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+
+    # Palette toggle for Dark Mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate                  # "slate" is the dark mode base
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
 
 markdown_extensions:
 - admonition

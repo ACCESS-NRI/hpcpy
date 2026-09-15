@@ -1,6 +1,7 @@
-import pytest
 import importlib
 import os
+
+import pytest
 
 
 def _import_from(a, b):

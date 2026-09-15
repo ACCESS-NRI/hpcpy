@@ -1,11 +1,13 @@
 """Top-level package for hpcpy."""
 
-from . import _version
+from typing import Union
+
 from hpcpy.client.client_factory import ClientFactory
 from hpcpy.client.direct import DirectClient
 from hpcpy.client.pbs import PBSClient
 from hpcpy.client.slurm import SlurmClient
-from typing import Union
+
+from . import _version
 
 __version__ = _version.get_versions()["version"]
 

@@ -59,7 +59,9 @@ The simplest way to submit a pre-written job script is via the `submit()` comman
 
 === "SLURM"
     ```shell
-    # Variables exported to the environment
+    # Environment variables are exported to the job
+    export a=1
+    export b="test"
     sbatch /path/to/script.sh
     ```
 
@@ -168,52 +170,6 @@ Deleting a job is accomplished by calling the delete method on either the client
     scancel $JOB_ID
     ```
 
-## Task dependence
+## Job dependency
 
-HPCpy implements a simple task-dependence strategy at the scheduler level, whereby, we can use scheduler directives to make one job dependent on another.
-
-=== "HPCpy (Python)"
-    ```python
-    job1 = client.submit("job1.sh")
-    job2 = client.submit("job2.sh")
-
-    # depends_on accepts a Job ID `str`, `Job()` object, or a list containing either.
-    job3 = client.submit("job3.sh", depends_on=[job1.id, job2])
-    ```
-=== "PBS"
-    ```shell
-    JOB1=$(qsub job1.sh)
-    JOB2=$(qsub -W depend=afterok:$JOB1 job2.sh)
-    ```
-
-!!! note
-    The `depends_on` accepts a Job ID `str`, `Job()` object, or a list containing either to maximise utility.
-
-Consider the following snippet:
-
-```python
-from hpcpy import get_client
-client = get_client()
-
-# Submit the first job
-first_job = client.submit("job.sh")
-
-# Submit some interim jobs all requiring the first to finish
-jobs = list()
-for x in range(3):
-    jobx = client.submit("job.sh", depends_on=first_job)
-    job_ids.append(jobx)
-
-# Submit a final job that requires everything to have finished.
-job_last = client.submit("job.sh", depends_on=jobs)
-```
-
-This will create 5 jobs:
-
-- 1 x starting job
-- 3 x middle jobs (which depend on the first)
-- 1 x finishing job (which depends on the middle jobs to complete)
-
-Essentially demonstrating a "fork and join" example.
-
-More advanced graphs can be assembled as needed, the complexity of which is determined by your scheduler.
+You can create dependency between jobs using the underlying scheduler. See [Job Dependency](dependency.md)
