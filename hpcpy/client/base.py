@@ -250,6 +250,8 @@ class BaseClient:
             Automatically decode response with utf-8, defaults to True
         env : dict, optional
             Add environment variables to the command.
+        omit_history : bool, optional
+            Omit this command from history tracking, by default False
 
         Raises
         ------
@@ -490,7 +492,7 @@ class BaseClient:
         return ",".join(f"{state}:{':'.join(ids)}" for state, ids in grouped.items())
 
     def get_scheduler_info(self):
-        """Get the version of the scheduler name and version
+        """Get the version of the scheduler name and version.
 
         Raises
         ------
