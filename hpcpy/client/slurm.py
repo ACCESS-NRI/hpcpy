@@ -35,6 +35,7 @@ class SlurmClient(BaseClient):
             statuses=STATUSES,
             status_attribute="short",
             dependency_map=DEPENDENCY,
+            scheduler_info=self.get_scheduler_info(),
             *args,
             **kwargs,
         )
@@ -210,3 +211,16 @@ class SlurmClient(BaseClient):
                 break
 
         return generic_status, native_full
+
+    def get_scheduler_info(self) -> tuple[str, str]:
+        """Get the scheduler info.
+
+        Returns
+        -------
+        tuple[str, str]
+            Name and version of the scheduler.
+        """
+        try:
+            return tuple(self._shell("sbatch --version", omit_history=True).split())
+        except:
+            return "unknown", "unknown"
