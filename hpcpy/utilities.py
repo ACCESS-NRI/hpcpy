@@ -2,6 +2,8 @@
 
 import json
 import logging
+import os
+import re
 import shlex
 import subprocess as sp
 import sys
@@ -214,3 +216,40 @@ def get_logger(name="hpcpy", level="debug"):
 def is_command_available(cmd: str) -> bool:
     """Test if a given command is available."""
     return shell(f"which {cmd}", check=False).returncode == 0
+
+
+def extract_storage_directive(path: str) -> str:
+    """Convert a path to the relevant storage directive for use in PBS.
+
+    Parameters
+    ----------
+    path : str
+        Path to something.
+
+    Returns
+    -------
+    str
+        Storage flag required to access the path.
+
+    Examples
+    --------
+    >>> extract_storage_directive("/g/data/ab12/some/file.txt")
+    'gdata/ab12'
+    >>> extract_storage_directive("/scratch/ab12/some/file.txt")
+    'scratch/ab12'
+    """
+    # PBS only, for now.
+    get_logger().warning("extract_storage_directive is PBS/NCI specific.")
+
+    # Looks for either /g/data or /scratch, assign it to root, then extracts the project
+    pattern = re.compile(r"^(?P<root>/g/data|/scratch)/(?P<project>[^/]+)")
+
+    # Sanitise the path and match it (i.e. /a//b/c becomes /a/b/c)
+    m = pattern.match(os.path.abspath(path))
+
+    # None if unable to parse for whatever reason (downstream to handle)
+    try:
+        root, project = m["root"].replace("/", ""), m["project"]
+        return f"{root}/{project}"
+    except:
+        return None

@@ -17,3 +17,22 @@ def test_shell_exception():
 
         expected = f"Error {ex.returncode}: {ex.stderr}"
         assert ex.__str__() == expected
+
+
+def test_extract_storage_directive():
+    """Test to extract storage directives from various paths."""
+
+    project = "abc123"
+
+    # gdata
+    assert f"gdata/{project}" == hu.extract_storage_directive(
+        f"/g/data/{project}/test/test"
+    )
+
+    # scratch
+    assert f"scratch/{project}" == hu.extract_storage_directive(
+        f"/scratch/{project}/test/test"
+    )
+
+    # None
+    assert None == hu.extract_storage_directive("should/be/none")
