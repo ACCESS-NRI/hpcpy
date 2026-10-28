@@ -57,7 +57,7 @@ parentdir_prefix = "hpcpy-"
 
 [tool.ruff]
 # Enable the flake8-comprehensions rules
-select = ["C4"]
+lint.select = ["C4"]
 
 # Automatically fix violations for these rules
-fixable = ["C4"]
+lint.fixable = ["C4", "I"]
