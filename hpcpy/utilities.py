@@ -16,41 +16,6 @@ import jinja2.meta as j2m
 from hpcpy.exceptions import ShellException
 
 
-def detect_shell() -> tuple[str, str, str]:
-    """Detect the users shell information.
-
-    Returns
-    -------
-    tuple[str, str, str]
-        shell name, path and version.
-    """
-    # Assume POSIX compliance
-    path = os.environ["SHELL"]
-
-    # Name is the executable
-    name = path.split("/")[-1]
-
-    # Try to figure it out
-    if name == "bash":
-        cmd = [path, "-c", 'echo "$BASH_VERSION"']
-    elif name == "zsh":
-        cmd = [path, "-c", 'echo "$ZSH_VERSION"']
-    else:
-        cmd = [path, "--version"]
-
-    try:
-        res = sp.run(cmd, capture_output=True, text=True, timeout=5)
-
-    except (OSError, sp.SubprocessError):
-        return None, None, None
-
-    # Extract the version information.
-    text = (res.stdout or res.stderr).strip()
-    m = re.search(r"\d+(?:\.\d+)+", text)
-    version = m.group(0) if m else (text.splitlines()[0] if text else None)
-    return name, path, version
-
-
 def shell(
     cmd, check=True, capture_output=True, env=None, **kwargs
 ) -> sp.CompletedProcess:
