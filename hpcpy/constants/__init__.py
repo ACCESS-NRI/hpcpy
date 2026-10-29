@@ -4,7 +4,6 @@ from pathlib import Path
 
 # Location for rendered job scripts
 JOB_SCRIPT_DIR = Path.home() / ".hpcpy" / "job_scripts"
-JOB_SCRIPT_DIR.mkdir(parents=True, exist_ok=True)
 
 # Generic Statuses (actually just PBS statuses, but used as a generic status)
 STATUS_CYCLE_HARVESTING = "U"
