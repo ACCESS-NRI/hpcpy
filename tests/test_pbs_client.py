@@ -328,8 +328,18 @@ def test_command_history(fp, client, job_id):
 
     job = client.submit(job_script)
 
+    print(client.history)
+
     # Test that the history comes out of the client
     assert client.history[-1] == "qsub test.sh"
 
     # And also the job
     assert job.history == client.history
+
+
+def test_get_scheduler_info(fp):
+    """Test get_scheduler_info"""
+    fp.register(f"qsub --version".split(), stdout="pbs_version = 1.2.3")
+    client = PBSClient()
+    assert client.scheduler_name == "pbs"
+    assert client.scheduler_version == "1.2.3"

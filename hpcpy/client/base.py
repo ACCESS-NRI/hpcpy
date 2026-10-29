@@ -38,6 +38,7 @@ class BaseClient:
         status_attribute,
         dependency_map=None,
         job_script_expiry="1H",
+        scheduler_info=(None, None),
     ):
         # Set the command templates etc.
         self.cmd_templates = cmd_templates
@@ -52,6 +53,9 @@ class BaseClient:
 
         # Track command history
         self.history = []
+
+        # Add scheduler information
+        self.scheduler_name, self.scheduler_version = scheduler_info
 
     def _clean_rendered_job_scripts(self, force=False) -> None:
         """Clean the rendered job scripts from the JOB_SCRIPT_DIR.
@@ -235,7 +239,7 @@ class BaseClient:
         """
         return self.status(job_id) == hc.STATUS_RUNNING
 
-    def _shell(self, cmd, decode=True, env=None):
+    def _shell(self, cmd, decode=True, env=None, omit_history=False):
         """Run the shell utility for the given command.
 
         Parameters
@@ -246,6 +250,8 @@ class BaseClient:
             Automatically decode response with utf-8, defaults to True
         env : dict, optional
             Add environment variables to the command.
+        omit_history : bool, optional
+            Omit this command from history tracking, by default False
 
         Raises
         ------
@@ -258,7 +264,8 @@ class BaseClient:
             Result from the underlying called command.
         """
         # Add the command to the command history
-        self.history.append(cmd)
+        if omit_history == False:
+            self.history.append(cmd)
 
         result = shell(cmd, env=env)
 
@@ -483,3 +490,13 @@ class BaseClient:
             grouped.setdefault(native_state, []).append(job_id)
 
         return ",".join(f"{state}:{':'.join(ids)}" for state, ids in grouped.items())
+
+    def get_scheduler_info(self):
+        """Get the version of the scheduler name and version.
+
+        Raises
+        ------
+        NotImplementedError
+            When not implemented by the subclass.
+        """
+        raise NotImplementedError()

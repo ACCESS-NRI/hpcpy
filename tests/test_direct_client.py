@@ -1,5 +1,7 @@
 """Tests for the Job class with DirectClient."""
 
+import os
+
 import pytest
 
 import hpcpy.utilities as hu
@@ -97,3 +99,11 @@ def test_submit_variables(client, job_script_path):
     # Dry-submit the job, get the result
     result = client.submit("test.sh", variables=variables, dry_run=True)
     assert result == "var1='SUCCESSFUL TEST' var2=1 var3=10.0 bash test.sh"
+
+
+def test_get_scheduler_info(fp):
+    """Test get_scheduler_info"""
+    os.environ["BASH_VERSION"] = "1.2.3"
+    client = DirectClient()
+    assert client.scheduler_name == "bash"
+    assert client.scheduler_version == "1.2.3"
