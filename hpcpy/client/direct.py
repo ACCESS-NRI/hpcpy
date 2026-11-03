@@ -66,6 +66,7 @@ class DirectClient(BaseClient):
         render: bool = False,
         dry_run: bool = False,
         variables: dict = {},
+        auto_clean: bool = True,
         **context,
     ):
         """Submit a job by running it directly as a local process.
@@ -82,6 +83,9 @@ class DirectClient(BaseClient):
             Return the command rather than executing it, by default False
         variables : dict, optional
             Environment variables to set for the process.
+        auto_clean : bool, optional
+            Clean previously rendered job scripts before submitting this one,
+            by default True
         **context :
             Additional key/value pairs for job script rendering.
 
@@ -107,6 +111,7 @@ class DirectClient(BaseClient):
             render=render,
             dry_run=True,
             variables=self._sanitize_dict(variables),
+            auto_clean=auto_clean,
             **context,
         )
 

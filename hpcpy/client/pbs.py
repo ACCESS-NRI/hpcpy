@@ -105,6 +105,7 @@ class PBSClient(BaseClient):
         module_purge: bool = False,
         module_use: str = None,
         modules: Union[str, list] = None,
+        auto_clean: bool = True,
         **context,
     ):
         """Submit a job to the scheduler.
@@ -138,6 +139,9 @@ class PBSClient(BaseClient):
             Path(s) to supply to a `module use` command in `{{ modules_head }}`.
         modules: Union[str,list], optional
             Modules to load with `module load` in `{{ modules_head }}`.
+        auto_clean: bool, optional
+            Clean previously rendered job scripts before submitting this one,
+            by default True
         **context:
             Additional key/value pairs to be added to command/jobscript interpolation.
 
@@ -199,6 +203,7 @@ class PBSClient(BaseClient):
             directives=directives,
             render=render,
             dry_run=dry_run,
+            auto_clean=auto_clean,
             **context,
         )
 
