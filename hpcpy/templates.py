@@ -1,3 +1,5 @@
+"""Code for accessing templates installed to the data/templates folder."""
+
 import sys
 
 from hpcpy.constants import TEMPLATE_ROOT
