@@ -72,6 +72,7 @@ class SlurmClient(BaseClient):
         queue: str = None,
         walltime: timedelta = None,
         variables: dict = {},
+        auto_clean: bool = True,
         **context,
     ):
         """Submit a job to the scheduler.
@@ -97,6 +98,9 @@ class SlurmClient(BaseClient):
             Walltime expressed as a timedelta, by default None
         variables: dict, optional
             Key/value environment variable pairs added to the qsub command.
+        auto_clean: bool, optional
+            Clean previously rendered job scripts before submitting this one,
+            by default True
         **context:
             Additional key/value pairs to be added to command/jobscript interpolation
 
@@ -158,6 +162,7 @@ class SlurmClient(BaseClient):
             render=render,
             dry_run=dry_run,
             env=_env,
+            auto_clean=auto_clean,
             **context,
         )
 

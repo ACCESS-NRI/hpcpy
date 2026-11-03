@@ -53,7 +53,7 @@ class BaseClient:
         # Track command history
         self.history = []
 
-    def _clean_rendered_job_scripts(self, force=False) -> None:
+    def clean_rendered_job_scripts(self, force=False) -> None:
         """Clean the rendered job scripts from the JOB_SCRIPT_DIR.
 
         Parameters
@@ -105,6 +105,7 @@ class BaseClient:
         render=False,
         dry_run=False,
         env={},
+        auto_clean=True,
         **context,
     ) -> Union[Job, str]:
         """Submit the job script.
@@ -121,6 +122,9 @@ class BaseClient:
             Return the command that would have been executed.
         env : dict
             Append the specified dictionary to the execution environment
+        auto_clean : bool, optional
+            Clean previously rendered job scripts before submitting this one,
+            by default True
         **context :
             Additional key/value pairs interpolated into the command and job script.
 
@@ -130,6 +134,9 @@ class BaseClient:
             Submitted job object, or the command to execute (if dry_run=True).
 
         """
+        if auto_clean:
+            self.clean_rendered_job_scripts()
+
         if render:
             self._logger.debug("Rendering job script.")
             _job_script = self._render_job_script(job_script, **context)
