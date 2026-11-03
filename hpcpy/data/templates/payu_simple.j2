@@ -1,0 +1,7 @@
+#!/bin/bash
+
+{{ modules_head }}
+
+module list
+
+{{ python_exe }} {{ executable }}

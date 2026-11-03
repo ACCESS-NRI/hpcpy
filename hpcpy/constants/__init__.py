@@ -2,8 +2,13 @@
 
 from pathlib import Path
 
+from hpcpy.utilities import get_installed_root
+
 # Location for rendered job scripts
 JOB_SCRIPT_DIR = Path.home() / ".hpcpy" / "job_scripts"
+
+# Location of installed templates
+TEMPLATE_ROOT = get_installed_root() / "data" / "templates"
 
 # Generic Statuses (actually just PBS statuses, but used as a generic status)
 STATUS_CYCLE_HARVESTING = "U"
