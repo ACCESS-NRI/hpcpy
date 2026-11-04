@@ -13,5 +13,5 @@ def test_list_templates():
 def test_auto_population():
     """Test the path to a given template is correct and that the auto-population works."""
     result = ht.PAYU_SIMPLE
-    expected = hu.get_installed_root() / "data" / "templates" / "payu_simple.j2"
+    expected = hu.get_installed_root() / "data" / "templates" / "payu_simple.sh"
     assert result == expected

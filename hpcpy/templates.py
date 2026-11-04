@@ -13,10 +13,10 @@ def list_templates() -> list:
     list
         List of paths with the j2 extension in the template dir
     """
-    return sorted(TEMPLATE_ROOT.glob("*.j2"))
+    return sorted(TEMPLATE_ROOT.glob("*.sh"))
 
 
 # Automatically populate the module space with the installed templates.
 for template_path in list_templates():
-    template_name = str(template_path.name).replace(".j2", "").upper()
+    template_name = str(template_path.name).replace(".sh", "").upper()
     setattr(sys.modules[__name__], template_name, template_path)
