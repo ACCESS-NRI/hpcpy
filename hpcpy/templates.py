@@ -11,7 +11,7 @@ def list_templates() -> list:
     Returns
     -------
     list
-        List of paths with the j2 extension in the template dir
+        List of paths with the sh extension in the template dir
     """
     return sorted(TEMPLATE_ROOT.glob("*.sh"))
 
