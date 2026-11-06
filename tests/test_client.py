@@ -71,5 +71,5 @@ def test_custom_job_script_dir(template_filepath):
         assert os.path.dirname(rendered_filepath) == tmpdir
 
         # Check it gets cleaned up
-        client._clean_rendered_job_scripts(force=True)
+        client.clean_rendered_job_scripts(force=True)
         assert os.path.isfile(rendered_filepath) == False
