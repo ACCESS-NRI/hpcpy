@@ -45,7 +45,7 @@ where = ["."]
 include = ["hpcpy*"]
 
 [tool.setuptools.package-data]
-hpcpy = ["data/templates/*]
+hpcpy = ["data/templates/*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "hpcpy.__version__"}
