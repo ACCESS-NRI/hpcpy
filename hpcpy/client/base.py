@@ -311,9 +311,9 @@ class BaseClient:
         _rendered = interpolate_file_template(template, **context)
 
         # Generate the output filepath
-        os.makedirs(hc.JOB_SCRIPT_DIR, exist_ok=True)
+        os.makedirs(self.job_script_dir, exist_ok=True)
         output_filename = self._get_job_script_filename(template)
-        output_filepath = hc.JOB_SCRIPT_DIR / output_filename
+        output_filepath = self.job_script_dir / output_filename
 
         # Write it out
         with open(output_filepath, "w") as fo:
