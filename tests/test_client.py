@@ -1,6 +1,7 @@
 """Client tests."""
 
 import os
+import tempfile as tf
 
 import pytest
 
@@ -18,6 +19,11 @@ def client():
     return PBSClient()
 
 
+@pytest.fixture()
+def template_filepath():
+    return hu.get_installed_root() / "data" / "test" / "test.j2"
+
+
 def test_get_job_script_filename(client):
     """Test get_job_script_filename."""
     hash_length = 5
@@ -29,11 +35,10 @@ def test_get_job_script_filename(client):
     assert len(result) == len(input_filename) + hash_length + 1  # underscore
 
 
-def test_render_job_script(client):
+def test_render_job_script(client, template_filepath):
     """Test rendering the job script."""
 
     # Write it out.
-    template_filepath = hu.get_installed_root() / "data" / "test" / "test.j2"
     rendered_filepath = client._render_job_script(template_filepath, myarg="world")
 
     rendered = open(rendered_filepath, "r").read().strip()
@@ -51,3 +56,20 @@ def test_clean_rendered_job_scripts(client):
     rjs = client.list_rendered_job_scripts()
 
     assert len(rjs) == 0
+
+
+def test_custom_job_script_dir(template_filepath):
+    """Test that the custom job script dir actually writes where it is expected."""
+
+    # Use a temporary directory
+    with tf.TemporaryDirectory() as tmpdir:
+
+        client = PBSClient(job_script_dir=tmpdir)
+
+        # Check it lands in the right place
+        rendered_filepath = client._render_job_script(template_filepath, myarg="world")
+        assert os.path.dirname(rendered_filepath) == tmpdir
+
+        # Check it gets cleaned up
+        client._clean_rendered_job_scripts(force=True)
+        assert os.path.isfile(rendered_filepath) == False

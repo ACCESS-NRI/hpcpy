@@ -2,6 +2,7 @@
 
 import os
 from datetime import datetime, timedelta
+from pathlib import Path
 from random import choice
 from string import ascii_uppercase
 from typing import Union
@@ -28,6 +29,8 @@ class BaseClient:
         Attribute to use for status lookup.
     job_script_expiry : str, optional
         Job script expiry interval, by default "1H"
+    job_script_dir : str, optional
+        Path to the job script directory, defaults to hpcpy.constants.JOB_SCRIPT_DIR
     """
 
     def __init__(
@@ -38,10 +41,12 @@ class BaseClient:
         status_attribute,
         dependency_map=None,
         job_script_expiry="1H",
+        job_script_dir=hc.JOB_SCRIPT_DIR,
     ):
         # Set the command templates etc.
         self.cmd_templates = cmd_templates
         self.job_script_expiry = job_script_expiry
+        self.job_script_dir = Path(job_script_dir)
         self.statuses = statuses
         self.status_attribute = status_attribute
         self.directive_templates = directive_templates
@@ -96,7 +101,7 @@ class BaseClient:
         list
             List of paths to job scripts.
         """
-        return [hc.JOB_SCRIPT_DIR / rjs for rjs in os.listdir(hc.JOB_SCRIPT_DIR)]
+        return [self.job_script_dir / rjs for rjs in os.listdir(self.job_script_dir)]
 
     def submit(
         self,
@@ -313,9 +318,9 @@ class BaseClient:
         _rendered = interpolate_file_template(template, **context)
 
         # Generate the output filepath
-        os.makedirs(hc.JOB_SCRIPT_DIR, exist_ok=True)
+        os.makedirs(self.job_script_dir, exist_ok=True)
         output_filename = self._get_job_script_filename(template)
-        output_filepath = hc.JOB_SCRIPT_DIR / output_filename
+        output_filepath = self.job_script_dir / output_filename
 
         # Write it out
         with open(output_filepath, "w") as fo:
