@@ -2,6 +2,7 @@
 
 import os
 import tempfile as tf
+from pathlib import Path
 
 import pytest
 
@@ -73,3 +74,13 @@ def test_custom_job_script_dir(template_filepath):
         # Check it gets cleaned up
         client.clean_rendered_job_scripts(force=True)
         assert os.path.isfile(rendered_filepath) == False
+
+
+def test_list_job_scripts_without_dir():
+    """Test that listing rendered jobscripts without the directory having been created returns empty list"""
+
+    with tf.TemporaryDirectory() as tmpdir:
+        jobscript_dir = Path(tmpdir) / "job_scripts"
+        client = client = PBSClient(job_script_dir=jobscript_dir)
+        assert jobscript_dir.exists() == False
+        assert len(client.list_rendered_job_scripts()) == 0
