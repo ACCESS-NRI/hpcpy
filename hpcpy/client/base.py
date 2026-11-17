@@ -101,7 +101,15 @@ class BaseClient:
         list
             List of paths to job scripts.
         """
-        return [self.job_script_dir / rjs for rjs in os.listdir(self.job_script_dir)]
+        # Empty list if directory doesn't exist
+        if not self.job_script_dir.exists():
+            rjs = []
+        else:
+            rjs = [
+                self.job_script_dir / _rjs for _rjs in os.listdir(self.job_script_dir)
+            ]
+
+        return rjs
 
     def submit(
         self,
