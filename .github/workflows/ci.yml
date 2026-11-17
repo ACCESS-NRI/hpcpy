@@ -46,5 +46,5 @@ jobs:
       env:
         HPCPY_DEV_MODE: 1
       run: |
-        python -m install pytest
+        python -m pip install pytest
         pytest -v
