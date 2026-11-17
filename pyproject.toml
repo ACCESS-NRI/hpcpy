@@ -17,7 +17,7 @@ license = {file="LICENSE"}
 dynamic = ["version"]
 
 # Dependencies
-requires-python = ">=3.9"
+requires-python = ">=3.13"
 dependencies = [
     "jinja2>=3.1.4",
     "pandas>=2.2.2",
