@@ -17,7 +17,7 @@ build:
 
 requirements:
   host:
-    - python >=3.13
+    - python >=3.11
     - pip
     - setuptools>=64
     - versioneer
@@ -25,7 +25,7 @@ requirements:
     - pandas >=2.2.2
     - pytest-subprocess==1.5.3
   run:
-    - python >=3.13
+    - python >=3.11
     - jinja2 >=3.1.4
     - pandas >=2.2.2
 
