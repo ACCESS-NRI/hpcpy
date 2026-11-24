@@ -28,7 +28,7 @@ class BaseClient:
     status_attribute : str
         Attribute to use for status lookup.
     job_script_expiry : str, optional
-        Job script expiry interval, by default "1H"
+        Job script expiry interval, by default "1h"
     job_script_dir : str, optional
         Path to the job script directory, defaults to hpcpy.constants.JOB_SCRIPT_DIR
     """
@@ -40,7 +40,7 @@ class BaseClient:
         statuses,
         status_attribute,
         dependency_map=None,
-        job_script_expiry="1H",
+        job_script_expiry="1h",
         job_script_dir=hc.JOB_SCRIPT_DIR,
     ):
         # Set the command templates etc.
